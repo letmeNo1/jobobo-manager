@@ -5,13 +5,12 @@ import SignUp from './screens/SignUp';
 import Dashboard from './screens/Dashboard';
 import Voiceprint from './screens/Voiceprint';
 import KnowledgeBase from './screens/KnowledgeBase';
-import AdminUserManagement from './screens/AdminUserManagement.tsx';
-// 1. 别忘了导入 Settings 页面
+import AdminUserManagement from './screens/AdminUserManagement';
 import Settings from './screens/Settings'; 
 
+// 将初始值设为一个空占位，或者完全为空
 const INITIAL_PERSONAS: Persona[] = [
-  { id: '1', name: 'Standard', content: 'You are a helpful and polite AI assistant.' },
-  { id: '2', name: 'Jazz Fan', content: 'You are a cool jazz enthusiast who uses musical metaphors.' },
+  { id: 'default', name: 'My AI', content: 'Loading persona...' }
 ];
 
 const App: React.FC = () => {
@@ -39,15 +38,14 @@ const App: React.FC = () => {
       case 'LOGIN': return <Login onNavigate={setCurrentScreen} />;
       case 'SIGNUP': return <SignUp onNavigate={setCurrentScreen} />;
       case 'ADMIN': return <AdminUserManagement onNavigate={setCurrentScreen} />;
-      
-      // 2. 添加 SETTINGS 的分支逻辑
       case 'SETTINGS': return <Settings onNavigate={setCurrentScreen} />;
-      
       case 'DASHBOARD':
         return (
           <Dashboard 
             onNavigate={setCurrentScreen} 
             personas={personas}
+            // 关键点：将 setPersonas 传递下去
+            setPersonas={setPersonas}
             activePersonaId={activePersonaId}
             setActivePersonaId={setActivePersonaId}
             onUpdatePersona={handleUpdatePersona}
@@ -58,8 +56,6 @@ const App: React.FC = () => {
         );
       case 'VOICEPRINT': return <Voiceprint onNavigate={setCurrentScreen} />;
       case 'KNOWLEDGE_BASE': return <KnowledgeBase onNavigate={setCurrentScreen} />;
-      
-      // 注意：如果 currentScreen 是 'SETTINGS' 但这里没写 case，就会执行下面这一行
       default: return <Login onNavigate={setCurrentScreen} />;
     }
   };
