@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Screen, Persona } from './types';
 import Login from './screens/Login';
@@ -6,6 +5,7 @@ import SignUp from './screens/SignUp';
 import Dashboard from './screens/Dashboard';
 import Voiceprint from './screens/Voiceprint';
 import KnowledgeBase from './screens/KnowledgeBase';
+import AdminUserManagement from './screens/AdminUserManagement.tsx';
 
 const INITIAL_PERSONAS: Persona[] = [
   { id: '1', name: 'Standard', content: 'You are a helpful and polite AI assistant.' },
@@ -34,10 +34,9 @@ const App: React.FC = () => {
 
   const renderScreen = () => {
     switch (currentScreen) {
-      case 'LOGIN':
-        return <Login onNavigate={setCurrentScreen} />;
-      case 'SIGNUP':
-        return <SignUp onNavigate={setCurrentScreen} />;
+      case 'LOGIN': return <Login onNavigate={setCurrentScreen} />;
+      case 'SIGNUP': return <SignUp onNavigate={setCurrentScreen} />;
+      case 'ADMIN': return <AdminUserManagement onNavigate={setCurrentScreen} />;
       case 'DASHBOARD':
         return (
           <Dashboard 
@@ -51,18 +50,16 @@ const App: React.FC = () => {
             setMemory={setMemory}
           />
         );
-      case 'VOICEPRINT':
-        return <Voiceprint onNavigate={setCurrentScreen} />;
-      case 'KNOWLEDGE_BASE':
-        return <KnowledgeBase onNavigate={setCurrentScreen} />;
-      default:
-        return <Login onNavigate={setCurrentScreen} />;
+      case 'VOICEPRINT': return <Voiceprint onNavigate={setCurrentScreen} />;
+      case 'KNOWLEDGE_BASE': return <KnowledgeBase onNavigate={setCurrentScreen} />;
+      default: return <Login onNavigate={setCurrentScreen} />;
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-0 md:p-4">
-      <div className="w-full max-w-md bg-white overflow-hidden md:rounded-[40px] shadow-2xl min-h-[100vh] md:min-h-0">
+    // 修改点：移除 max-w-md，增加 md 响应式断点控制
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-0 md:p-8">
+      <div className="w-full max-w-full md:max-w-6xl bg-white overflow-hidden md:rounded-[40px] shadow-2xl min-h-screen md:min-h-[85vh] transition-all">
         {renderScreen()}
       </div>
     </div>

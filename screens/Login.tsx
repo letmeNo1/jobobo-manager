@@ -1,7 +1,5 @@
-
 import React, { useState } from 'react';
-import { User, Lock, ArrowRight } from 'lucide-react';
-import Layout from '../components/Layout';
+import { LogIn, ShieldCheck } from 'lucide-react';
 import Input from '../components/Input';
 import { Screen } from '../types';
 
@@ -10,84 +8,105 @@ interface LoginProps {
 }
 
 const Login: React.FC<LoginProps> = ({ onNavigate }) => {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleLogin = () => {
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
-      onNavigate('DASHBOARD');
+    setError('');
+
+    try {
+      // 注意：这里使用相对路径 /api，Nginx 会帮我们转发到 5000 端口
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        // 登录成功：将用户信息和角色存入 localStorage 供全应用使用
+        localStorage.setItem('user', JSON.stringify({
+          username: result.username,
+          role: result.role
+        }));
+        
+        // 跳转到主界面
+        onNavigate('DASHBOARD');
+      } else {
+        setError(result.detail || '用户名或密码错误');
+      }
+    } catch (err) {
+      setError('无法连接到服务器，请检查后端状态');
+    } finally {
       setLoading(false);
-    }, 1500);
+    }
   };
 
   return (
-    <Layout className="px-8 pt-20 bg-white">
-      <div className="flex flex-col items-center mb-12">
-        <div className="w-32 h-32 bg-gray-50 rounded-[40px] p-4 mb-6 border border-gray-100 flex items-center justify-center overflow-hidden shadow-inner">
-          <img 
-            src="https://raw.githubusercontent.com/jabra-fan/assets/main/jabra-mascot-wink.png" 
-            alt="Jobobo Mascot" 
-            className="w-full h-full object-contain"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = "https://img.freepik.com/free-vector/cute-robot-waving-hand-cartoon-character-illustration_138676-2744.jpg";
-            }}
-          />
+    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-gray-50">
+      <div className="w-full max-w-md bg-white rounded-[40px] p-10 shadow-xl border border-gray-100">
+        <div className="flex flex-col items-center mb-10">
+          <div className="w-20 h-20 bg-yellow-400 rounded-3xl flex items-center justify-center mb-4 shadow-lg shadow-yellow-200">
+            <LogIn size={40} className="text-gray-900" />
+          </div>
+          <h2 className="text-3xl font-black text-gray-800 tracking-tight">JOBOBO</h2>
+          <p className="text-gray-400 font-bold text-xs uppercase tracking-widest mt-2">Management System</p>
         </div>
-        <h1 className="text-3xl font-black text-gray-800 mb-1">Jobobo</h1>
-        <p className="text-gray-400 font-medium">Manage your AI Companion</p>
-      </div>
 
-      <div className="space-y-1">
-        <Input 
-          label="Email / Phone" 
-          placeholder="user@example.com" 
-          icon={<User size={20} />} 
-        />
-        <Input 
-          label="Password" 
-          type="password" 
-          placeholder="••••••••" 
-          icon={<Lock size={20} />} 
-        />
-      </div>
+        <form onSubmit={handleLogin} className="space-y-6">
+          <Input 
+            label="Username" 
+            placeholder="输入账号" 
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+          />
+          <Input 
+            label="Password" 
+            type="password" 
+            placeholder="输入密码" 
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
 
-      <div className="flex justify-end mb-8">
-        <button className="text-yellow-500 text-sm font-bold hover:underline transition-all">Forgot Password?</button>
-      </div>
+          {error && (
+            <div className="bg-red-50 text-red-500 text-xs font-bold p-4 rounded-2xl border border-red-100 animate-pulse">
+              {error}
+            </div>
+          )}
 
-      <button 
-        onClick={handleLogin}
-        disabled={loading}
-        className="w-full yellow-button py-5 rounded-3xl flex items-center justify-center font-black text-lg shadow-xl active:scale-[0.98] disabled:opacity-70"
-      >
-        {loading ? (
-          <div className="flex items-center space-x-2">
-            <svg className="animate-spin h-5 w-5 text-gray-800" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            <span>Logging in...</span>
-          </div>
-        ) : (
-          <div className="flex items-center space-x-2">
-            <span>Get Started</span>
-            <ArrowRight size={22} />
-          </div>
-        )}
-      </button>
+          <button 
+            type="submit" 
+            disabled={loading}
+            className={`w-full yellow-button py-5 rounded-3xl font-black text-lg shadow-xl active:scale-[0.98] transition-all ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+          >
+            {loading ? '正在验证...' : 'SIGN IN'}
+          </button>
+        </form>
 
-      <div className="mt-8 text-center">
-        <p className="text-gray-500 text-sm font-medium">
-          New here? {' '}
+        <div className="mt-8 flex justify-center">
           <button 
             onClick={() => onNavigate('SIGNUP')}
-            className="text-yellow-500 font-black"
+            className="text-gray-400 text-xs font-bold uppercase tracking-widest hover:text-gray-600 transition-colors"
           >
             Create Account
           </button>
-        </p>
+        </div>
       </div>
-    </Layout>
+      
+      <div className="mt-8 flex items-center text-gray-300">
+        <ShieldCheck size={16} className="mr-2" />
+        <span className="text-[10px] font-bold uppercase tracking-widest">Secure Admin Access</span>
+      </div>
+    </div>
   );
 };
 

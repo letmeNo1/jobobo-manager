@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 interface LayoutProps {
@@ -8,7 +7,8 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children, className = "" }) => {
   return (
-    <div className={`min-h-screen max-w-md mx-auto bg-white shadow-sm flex flex-col ${className}`}>
+    // 修改点：移除 max-w-md，让宽度由 App 容器控制
+    <div className={`w-full mx-auto bg-white flex flex-col ${className}`}>
       {children}
     </div>
   );
