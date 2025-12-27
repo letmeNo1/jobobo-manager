@@ -45,7 +45,7 @@ const Voiceprint: React.FC<VoiceprintProps> = ({ onNavigate }) => {
             <UserPlus size={32} />
           </div>
           <p className="text-center text-sm text-gray-500 px-6">
-            Select a conversation segment to train Jobobo's voice recognition model.
+            Select a conversation segment to train Jabobo's voice recognition model.
           </p>
         </div>
 

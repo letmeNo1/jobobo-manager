@@ -152,7 +152,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             />
           </div>
           <div className="absolute bottom-[-10px] left-1/2 -translate-x-1/2 bg-yellow-400 text-gray-900 px-6 py-1 rounded-full font-black text-sm shadow-md uppercase">
-            JOBOBO
+            Jabobo
           </div>
         </div>
       </div>

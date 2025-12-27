@@ -14,8 +14,8 @@ const SignUp: React.FC<SignUpProps> = ({ onNavigate }) => {
       <div className="flex justify-center mb-10">
         <div className="w-16 h-16 bg-gray-50 rounded-2xl p-1 border border-gray-100 flex items-center justify-center overflow-hidden">
           <img 
-            src="https://picsum.photos/seed/jobobo/200/200" 
-            alt="Jobobo Logo" 
+            src="https://picsum.photos/seed/Jabobo/200/200" 
+            alt="Jabobo Logo" 
             className="w-full h-full object-cover rounded-xl"
           />
         </div>

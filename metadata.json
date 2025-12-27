@@ -1,6 +1,6 @@
 {
-  "name": "Jobobo Manager",
-  "description": "A comprehensive interface to manage your Jobobo AI companion, including persona settings, memory inputs, voiceprint training, and knowledge base management.",
+  "name": "Jabobo Manager",
+  "description": "A comprehensive interface to manage your Jabobo AI companion, including persona settings, memory inputs, voiceprint training, and knowledge base management.",
   "requestFramePermissions": [
     "microphone"
   ]

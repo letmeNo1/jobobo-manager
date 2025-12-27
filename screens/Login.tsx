@@ -50,7 +50,7 @@ const Login: React.FC<LoginProps> = ({ onNavigate }) => {
           <div className="w-20 h-20 bg-yellow-400 rounded-3xl flex items-center justify-center mb-4 shadow-lg shadow-yellow-200">
             <LogIn size={40} className="text-gray-900" />
           </div>
-          <h2 className="text-3xl font-black text-gray-800 tracking-tight">JOBOBO</h2>
+          <h2 className="text-3xl font-black text-gray-800 tracking-tight">Jabobo</h2>
           <p className="text-gray-400 font-bold text-xs uppercase tracking-widest mt-2">Management System</p>
         </div>
 
