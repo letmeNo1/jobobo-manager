@@ -15,7 +15,6 @@ const Login: React.FC<LoginProps> = ({ onNavigate }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
-  // 使用我们编写的权限 Hook
   const { login } = useAuth(onNavigate);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -24,19 +23,21 @@ const Login: React.FC<LoginProps> = ({ onNavigate }) => {
     setError('');
 
     try {
-      // 调用封装好的 API
+      // 1. 调用登录 API
       const result = await authApi.login(username, password);
       
       if (result.success) {
-        // 调用 hook 的 login 方法处理后续逻辑
+        // 2. 核心修改：将后端返回的 token 一并传给 login 方法进行存储
+        // 这样 apiClient 的请求拦截器才能获取到 token
         login({ 
           username: result.username, 
-          role: result.role 
+          role: result.role,
+          token: result.token // <--- 必须添加这一行
         });
       }
     } catch (err: any) {
       // 显示来自后端或 API 层的具体错误
-      setError(err.message);
+      setError(err.message || '登录失败，请检查网络或账号密码');
     } finally {
       setLoading(false);
     }
@@ -71,7 +72,7 @@ const Login: React.FC<LoginProps> = ({ onNavigate }) => {
           />
 
           {error && (
-            <div className="bg-red-50 text-red-500 text-xs font-bold p-4 rounded-2xl border border-red-100 animate-pulse">
+            <div className="bg-red-50 text-red-500 text-[10px] font-bold p-4 rounded-2xl border border-red-100 animate-pulse">
               {error}
             </div>
           )}
