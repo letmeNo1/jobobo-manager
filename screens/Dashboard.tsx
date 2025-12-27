@@ -18,7 +18,6 @@ import { configApi, UserConfig } from '../api/user';
 interface DashboardProps {
   onNavigate: (screen: Screen) => void;
   personas: Persona[];
-  // 关键：定义 setPersonas 的类型
   setPersonas: React.Dispatch<React.SetStateAction<Persona[]>>;
   activePersonaId: string;
   setActivePersonaId: (id: string) => void;
@@ -57,24 +56,35 @@ const Dashboard: React.FC<DashboardProps> = ({
     }
   }, []);
 
+  /**
+   * 1. 获取后端配置：包含 JSON 解析逻辑
+   */
   const fetchServerConfig = async () => {
     try {
       const res = await configApi.getUserConfig();
+      // 注意：apiClient 已经脱壳返回了 .data，所以这里 res 是 ApiResponse<UserConfig>
       if (res.success && res.data) {
-        // --- 核心覆盖逻辑 ---
-        // 构造从后端获取的人设，直接覆盖掉前端的 personas 数组
-        const serverPersona: Persona = {
-          id: 'server-active',
-          name: 'Main Persona',
-          content: res.data.persona || ''
-        };
+        const rawPersona = res.data.persona;
         
-        setPersonas([serverPersona]); // 覆盖掉那两个默认的人设
-        setActivePersonaId('server-active');
+        // --- 核心逻辑：尝试解析多个人设 JSON ---
+        try {
+          const parsedPersonas = JSON.parse(rawPersona);
+          if (Array.isArray(parsedPersonas) && parsedPersonas.length > 0) {
+            setPersonas(parsedPersonas);
+            // 默认选中第一个人设
+            setActivePersonaId(parsedPersonas[0].id);
+          }
+        } catch (e) {
+          // 兼容性：如果后端存的是老版本的纯文本，构造一个初始 Tab
+          if (rawPersona && rawPersona !== "[]") {
+            setPersonas([{ id: 'server-legacy', name: 'My AI', content: rawPersona }]);
+            setActivePersonaId('server-legacy');
+          }
+        }
         
         setMemory(res.data.memory || '');
-        setVoiceStatus(res.data.voice_status);
-        setKbStatus(res.data.kb_status);
+        setVoiceStatus(res.data.voice_status || '已就绪');
+        setKbStatus(res.data.kb_status || '已同步');
       }
     } catch (err) {
       console.error("Fetch failed", err);
@@ -83,19 +93,28 @@ const Dashboard: React.FC<DashboardProps> = ({
     }
   };
 
+  /**
+   * 2. 同步函数：解决 TS(2345) 报错并实现全量同步
+   */
   const handleSync = async () => {
     setIsSyncing(true);
     try {
+      // 补齐 UserConfig 接口要求的所有字段
       const payload: UserConfig = {
-        persona: activePersona.content,
+        // 将整个 personas 数组转为字符串，确保多设备能看到所有 Tab
+        persona: JSON.stringify(personas), 
         memory: memory,
         voice_status: voiceStatus,
         kb_status: kbStatus
       };
+
       const res = await configApi.syncConfig(payload);
-      if (res.success) alert("同步成功！数据已更新至数据库。");
+      if (res.success) {
+        alert("✨ 数据同步成功！");
+      }
     } catch (err) {
-      alert("同步失败，请检查网络或后端连接");
+      console.error("Sync Error:", err);
+      alert("同步失败，请检查网络或后端");
     } finally {
       setIsSyncing(false);
     }
@@ -110,7 +129,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   return (
     <Layout className="bg-gray-50 pb-12">
-      {/* 顶部：欢迎语 */}
+      {/* 顶部：用户信息 */}
       <div className="bg-white p-6 pb-12 rounded-b-[40px] shadow-sm mb-6 flex flex-col items-center">
         <div className="w-full flex justify-between items-center mb-4 px-2">
           <div className="flex flex-col">
@@ -138,7 +157,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         </div>
       </div>
 
-      {/* 1. 人设定制 */}
+      {/* 1. 多人设 Tab 切换区 */}
       <div className="px-6 mb-4">
         <div className="bg-white p-5 rounded-[24px] shadow-sm border border-white">
           <div className="flex items-center justify-between mb-4">
@@ -150,23 +169,28 @@ const Dashboard: React.FC<DashboardProps> = ({
               <Plus size={18} />
             </button>
           </div>
+          
           <div className="flex space-x-2 overflow-x-auto pb-4 no-scrollbar">
             {personas.map(p => (
               <button
                 key={p.id}
                 onClick={() => setActivePersonaId(p.id)}
                 className={`flex-shrink-0 px-4 py-2 rounded-xl text-xs font-black transition-all ${
-                  activePersonaId === p.id ? 'bg-yellow-400 text-gray-900 shadow-sm' : 'bg-gray-50 text-gray-400 border border-gray-100'
+                  activePersonaId === p.id 
+                    ? 'bg-yellow-400 text-gray-900 shadow-sm' 
+                    : 'bg-gray-50 text-gray-400 border border-gray-100'
                 }`}
               >
                 {p.name}
               </button>
             ))}
           </div>
+
           <textarea 
             value={activePersona.content}
             onChange={(e) => onUpdatePersona(activePersonaId, e.target.value)}
-            className="w-full bg-gray-50 rounded-2xl p-4 text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-yellow-400/20 border border-gray-50 min-h-[100px]"
+            placeholder="输入人设描述..."
+            className="w-full bg-gray-50 rounded-2xl p-4 text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-yellow-400/20 border border-gray-50 min-h-[120px]"
           />
         </div>
       </div>
@@ -181,15 +205,16 @@ const Dashboard: React.FC<DashboardProps> = ({
           <textarea 
             value={memory}
             onChange={(e) => setMemory(e.target.value)}
+            placeholder="输入 AI 需要记住的信息..."
             className="w-full bg-gray-50 rounded-2xl p-4 text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-yellow-400/20 border border-gray-50 min-h-[80px]"
           />
         </div>
       </div>
 
-      {/* 3. 功能按钮网格 */}
+      {/* 3. 状态按钮 */}
       <div className="px-6 grid grid-cols-2 gap-4 mb-8">
-        <button onClick={() => onNavigate('VOICEPRINT')} className="bg-white p-6 rounded-[28px] shadow-sm flex flex-col items-center hover:shadow-md transition-all active:scale-95 border border-white relative">
-          <div className={`absolute top-4 right-4 w-2 h-2 rounded-full ${voiceStatus === '已就绪' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-gray-300'}`} />
+        <button onClick={() => onNavigate('VOICEPRINT')} className="bg-white p-6 rounded-[28px] shadow-sm flex flex-col items-center hover:shadow-md active:scale-95 border border-white relative">
+          <div className={`absolute top-4 right-4 w-2 h-2 rounded-full ${voiceStatus === '已就绪' ? 'bg-green-500' : 'bg-gray-300'}`} />
           <div className="w-12 h-12 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center mb-3">
             <Waves size={24} />
           </div>
@@ -197,8 +222,8 @@ const Dashboard: React.FC<DashboardProps> = ({
           <span className="text-[9px] text-gray-300 mt-1 font-bold uppercase tracking-widest">{voiceStatus}</span>
         </button>
 
-        <button onClick={() => onNavigate('KNOWLEDGE_BASE')} className="bg-white p-6 rounded-[28px] shadow-sm flex flex-col items-center hover:shadow-md transition-all active:scale-95 border border-white relative">
-          <div className={`absolute top-4 right-4 w-2 h-2 rounded-full ${kbStatus === '已同步' ? 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]' : 'bg-gray-300'}`} />
+        <button onClick={() => onNavigate('KNOWLEDGE_BASE')} className="bg-white p-6 rounded-[28px] shadow-sm flex flex-col items-center hover:shadow-md active:scale-95 border border-white relative">
+          <div className={`absolute top-4 right-4 w-2 h-2 rounded-full ${kbStatus === '已同步' ? 'bg-blue-500' : 'bg-gray-300'}`} />
           <div className="w-12 h-12 bg-purple-50 text-purple-500 rounded-2xl flex items-center justify-center mb-3">
             <Book size={24} />
           </div>
@@ -215,25 +240,25 @@ const Dashboard: React.FC<DashboardProps> = ({
           className="w-full yellow-button py-5 rounded-3xl flex items-center justify-center font-black text-lg shadow-xl active:scale-[0.98] disabled:opacity-70"
         >
           {isSyncing ? <Loader2 size={22} className="mr-3 animate-spin" /> : <RefreshCw size={22} className="mr-3" />}
-          <span>{isSyncing ? 'Syncing...' : 'Sync Changes'}</span>
+          <span>{isSyncing ? 'Syncing...' : 'Sync All Changes'}</span>
         </button>
       </div>
 
       {/* 5. 底部导航 */}
       <div className="px-6 border-t border-gray-100 pt-8 flex flex-wrap justify-center items-center gap-y-4 gap-x-8">
-        <button onClick={() => onNavigate('SETTINGS')} className="flex items-center text-gray-400 text-[10px] font-black uppercase tracking-widest hover:text-gray-900 transition-colors">
+        <button onClick={() => onNavigate('SETTINGS')} className="flex items-center text-gray-400 text-[10px] font-black uppercase tracking-widest hover:text-gray-900">
           <Settings2 size={16} className="mr-2" />
           Settings
         </button>
 
         {currentUser.role === 'Admin' && (
-          <button onClick={() => onNavigate('ADMIN')} className="flex items-center text-yellow-600 text-[10px] font-black uppercase tracking-widest hover:text-yellow-700 transition-colors">
+          <button onClick={() => onNavigate('ADMIN')} className="flex items-center text-yellow-600 text-[10px] font-black uppercase tracking-widest hover:text-yellow-700">
             <Users size={16} className="mr-2" />
             Admin Console
           </button>
         )}
 
-        <button onClick={handleLogout} className="flex items-center text-gray-400 text-[10px] font-black uppercase tracking-widest hover:text-red-500 transition-colors">
+        <button onClick={handleLogout} className="flex items-center text-gray-400 text-[10px] font-black uppercase tracking-widest hover:text-red-500">
           <LogOut size={16} className="mr-2" />
           Sign Out
         </button>
