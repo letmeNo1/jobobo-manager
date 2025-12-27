@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { LogIn, ShieldCheck } from 'lucide-react';
 import Input from '../components/Input';
 import { Screen } from '../types';
+import { authApi } from '../api/auth';
+import { useAuth } from '../hooks/useAuth';
 
 interface LoginProps {
   onNavigate: (screen: Screen) => void;
@@ -12,6 +14,9 @@ const Login: React.FC<LoginProps> = ({ onNavigate }) => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  
+  // 使用我们编写的权限 Hook
+  const { login } = useAuth(onNavigate);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,31 +24,19 @@ const Login: React.FC<LoginProps> = ({ onNavigate }) => {
     setError('');
 
     try {
-      // 注意：这里使用相对路径 /api，Nginx 会帮我们转发到 5000 端口
-      const response = await fetch('/api/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, password }),
-      });
-
-      const result = await response.json();
-
-      if (response.ok && result.success) {
-        // 登录成功：将用户信息和角色存入 localStorage 供全应用使用
-        localStorage.setItem('user', JSON.stringify({
-          username: result.username,
-          role: result.role
-        }));
-        
-        // 跳转到主界面
-        onNavigate('DASHBOARD');
-      } else {
-        setError(result.detail || '用户名或密码错误');
+      // 调用封装好的 API
+      const result = await authApi.login(username, password);
+      
+      if (result.success) {
+        // 调用 hook 的 login 方法处理后续逻辑
+        login({ 
+          username: result.username, 
+          role: result.role 
+        });
       }
-    } catch (err) {
-      setError('无法连接到服务器，请检查后端状态');
+    } catch (err: any) {
+      // 显示来自后端或 API 层的具体错误
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -86,7 +79,7 @@ const Login: React.FC<LoginProps> = ({ onNavigate }) => {
           <button 
             type="submit" 
             disabled={loading}
-            className={`w-full yellow-button py-5 rounded-3xl font-black text-lg shadow-xl active:scale-[0.98] transition-all ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+            className={`w-full bg-yellow-400 hover:bg-yellow-500 text-gray-900 py-5 rounded-3xl font-black text-lg shadow-xl active:scale-[0.98] transition-all ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
           >
             {loading ? '正在验证...' : 'SIGN IN'}
           </button>

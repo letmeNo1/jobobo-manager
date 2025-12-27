@@ -1,101 +1,158 @@
-import React, { useEffect, useState } from 'react';
-import { Users, Lock, LogOut, ChevronRight, Settings } from 'lucide-react';
-import { Screen } from '../types';
+
+import React from 'react';
+import { Waves, Book, UserCircle, Brain, RefreshCw, Plus, Settings2 } from 'lucide-react';
+import Layout from '../components/Layout';
+import { Screen, Persona } from '../types';
 
 interface DashboardProps {
   onNavigate: (screen: Screen) => void;
+  personas: Persona[];
+  activePersonaId: string;
+  setActivePersonaId: (id: string) => void;
+  onUpdatePersona: (id: string, content: string) => void;
+  onAddPersona: () => void;
+  memory: string;
+  setMemory: (v: string) => void;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
-  const [user, setUser] = useState<{ username: string; role: string } | null>(null);
-
-  useEffect(() => {
-    // 从本地存储读取登录信息
-    const savedUser = localStorage.getItem('user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    } else {
-      onNavigate('LOGIN'); // 未登录则强制跳转
-    }
-  }, [onNavigate]);
-
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    onNavigate('LOGIN');
-  };
-
-  if (!user) return null;
+const Dashboard: React.FC<DashboardProps> = ({ 
+  onNavigate, 
+  personas, 
+  activePersonaId, 
+  setActivePersonaId,
+  onUpdatePersona,
+  onAddPersona,
+  memory, 
+  setMemory 
+}) => {
+  const activePersona = personas.find(p => p.id === activePersonaId) || personas[0];
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      {/* 顶部栏 */}
-      <div className="flex justify-between items-center mb-10">
-        <div>
-          <h1 className="text-3xl font-black text-gray-900">你好, {user.username}</h1>
-          <div className="flex items-center mt-1">
-            <span className={`text-[10px] font-bold uppercase tracking-[0.2em] px-2 py-1 rounded-md ${
-              user.role === 'Admin' ? 'bg-yellow-400 text-gray-900' : 'bg-blue-500 text-white'
-            }`}>
-              {user.role}
-            </span>
+    <Layout className="bg-gray-50 pb-8">
+      {/* Header Area with Mascot */}
+      <div className="bg-white p-6 pb-12 rounded-b-[40px] shadow-sm mb-6 flex flex-col items-center">
+        <div className="relative mb-6">
+          <div className="w-56 h-72 bg-gray-50 rounded-3xl overflow-hidden flex items-center justify-center p-4">
+            {/* Mascot Image from prompt reference */}
+            <img 
+              src="https://raw.githubusercontent.com/jabra-fan/assets/main/jabra-mascot-wink.png" 
+              alt="Jobobo Mascot" 
+              className="w-full h-full object-contain"
+              onError={(e) => {
+                // Fallback to a stylistically similar placeholder if the specific URL isn't reachable
+                (e.target as HTMLImageElement).src = "https://img.freepik.com/free-vector/cute-robot-waving-hand-cartoon-character-illustration_138676-2744.jpg";
+              }}
+            />
+          </div>
+          <div className="absolute top-4 right-4 flex items-center bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full shadow-sm border border-gray-100">
+            <div className="w-2 h-2 bg-green-500 rounded-full mr-2 pulse-animation"></div>
+            <span className="text-[10px] font-bold text-gray-600 uppercase tracking-wider">Active</span>
+          </div>
+          <div className="absolute bottom-[-10px] left-1/2 -translate-x-1/2 bg-yellow-400 text-gray-900 px-6 py-1 rounded-full font-black text-sm shadow-md">
+            JOBOBO
           </div>
         </div>
+      </div>
+
+      {/* 1. Persona Customization Section */}
+      <div className="px-6 mb-4">
+        <div className="bg-white p-5 rounded-[24px] shadow-sm border border-white">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center text-yellow-500">
+              <UserCircle size={20} className="mr-2" />
+              <h3 className="font-bold text-gray-800">人设定制</h3>
+            </div>
+            <button 
+              onClick={onAddPersona}
+              className="p-2 bg-gray-50 rounded-xl text-gray-400 hover:text-yellow-500 transition-colors"
+            >
+              <Plus size={18} />
+            </button>
+          </div>
+
+          {/* Persona Switcher Chips */}
+          <div className="flex space-x-2 overflow-x-auto pb-4 no-scrollbar">
+            {personas.map(p => (
+              <button
+                key={p.id}
+                onClick={() => setActivePersonaId(p.id)}
+                className={`flex-shrink-0 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                  activePersonaId === p.id 
+                    ? 'bg-yellow-400 text-gray-900 shadow-sm' 
+                    : 'bg-gray-50 text-gray-400 border border-gray-100'
+                }`}
+              >
+                {p.name}
+              </button>
+            ))}
+          </div>
+
+          <textarea 
+            value={activePersona.content}
+            onChange={(e) => onUpdatePersona(activePersona.id, e.target.value)}
+            placeholder={`Describe ${activePersona.name}'s personality...`}
+            className="w-full bg-gray-50 rounded-2xl p-4 text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-yellow-400/20 border border-gray-100 min-h-[100px] transition-all"
+          />
+        </div>
+      </div>
+
+      {/* 2. Memory Input Section */}
+      <div className="px-6 mb-6">
+        <div className="bg-white p-5 rounded-[24px] shadow-sm border border-white">
+          <div className="flex items-center mb-3 text-yellow-500">
+            <Brain size={20} className="mr-2" />
+            <h3 className="font-bold text-gray-800">记忆输入</h3>
+          </div>
+          <textarea 
+            value={memory}
+            onChange={(e) => setMemory(e.target.value)}
+            placeholder="Tell Jobobo things to remember..."
+            className="w-full bg-gray-50 rounded-2xl p-4 text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-yellow-400/20 border border-gray-100 min-h-[80px] transition-all"
+          />
+        </div>
+      </div>
+
+      {/* 3. Action Buttons Section (Voiceprint & Knowledge Base) */}
+      <div className="px-6 grid grid-cols-2 gap-4 mb-6">
         <button 
-          onClick={handleLogout}
-          className="w-12 h-12 bg-white rounded-2xl shadow-sm flex items-center justify-center text-gray-400 hover:text-red-500 hover:shadow-md transition-all"
+          onClick={() => onNavigate('VOICEPRINT')}
+          className="bg-white p-6 rounded-[28px] shadow-sm flex flex-col items-center hover:shadow-md transition-all active:scale-95 border border-white"
         >
-          <LogOut size={20} />
+          <div className="w-14 h-14 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center mb-3 shadow-inner">
+            <Waves size={28} />
+          </div>
+          <span className="font-bold text-gray-800 text-sm">声纹设置</span>
+          <span className="text-[10px] text-gray-400 mt-1 font-medium">Voiceprint</span>
+        </button>
+
+        <button 
+          onClick={() => onNavigate('KNOWLEDGE_BASE')}
+          className="bg-white p-6 rounded-[28px] shadow-sm flex flex-col items-center hover:shadow-md transition-all active:scale-95 border border-white"
+        >
+          <div className="w-14 h-14 bg-purple-50 text-purple-500 rounded-2xl flex items-center justify-center mb-3 shadow-inner">
+            <Book size={28} />
+          </div>
+          <span className="font-bold text-gray-800 text-sm">知识库</span>
+          <span className="text-[10px] text-gray-400 mt-1 font-medium">Knowledge Base</span>
         </button>
       </div>
 
-      {/* 功能卡片区域 */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        
-        {/* 1. 公共功能：修改密码 (所有人可见) */}
-        <div 
-          onClick={() => onNavigate('ADMIN')} 
-          className="bg-white p-8 rounded-[40px] shadow-sm border border-gray-100 cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all group"
+      {/* Primary Update Action */}
+      <div className="px-6">
+        <button 
+          onClick={() => alert('Jobobo Updated!')}
+          className="w-full yellow-button py-5 rounded-3xl flex items-center justify-center font-black text-lg shadow-lg active:scale-[0.98]"
         >
-          <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center mb-6 text-blue-500 group-hover:bg-blue-500 group-hover:text-white transition-colors">
-            <Lock size={28} />
-          </div>
-          <h3 className="text-xl font-black text-gray-800">安全设置</h3>
-          <p className="text-gray-400 text-sm mt-2 leading-relaxed">管理您的账户安全，定期修改登录密码。</p>
-          <div className="mt-6 flex items-center text-blue-500 font-bold text-xs uppercase tracking-widest">
-            进入设置 <ChevronRight size={14} className="ml-1" />
-          </div>
-        </div>
-
-        {/* 2. 管理员功能：用户管理 (仅 Admin 可见) */}
-        {user.role === 'Admin' && (
-          <div 
-            onClick={() => onNavigate('ADMIN')}
-            className="bg-gray-900 p-8 rounded-[40px] shadow-2xl cursor-pointer hover:scale-[1.03] transition-all group"
-          >
-            <div className="w-14 h-14 bg-yellow-400 rounded-2xl flex items-center justify-center mb-6 text-gray-900">
-              <Users size={28} />
-            </div>
-            <h3 className="text-xl font-black text-white">用户管理</h3>
-            <p className="text-gray-400 text-sm mt-2 leading-relaxed">创建新用户、审核权限以及删除过期账号。</p>
-            <div className="mt-6 flex items-center text-yellow-400 font-bold text-xs uppercase tracking-widest">
-              进入控制台 <ChevronRight size={14} className="ml-1" />
-            </div>
-          </div>
-        )}
-
-        {/* 3. 示例功能：系统日志 (仅 Admin 可见) */}
-        {user.role === 'Admin' && (
-          <div className="bg-white p-8 rounded-[40px] shadow-sm border border-gray-100 cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all group">
-            <div className="w-14 h-14 bg-purple-50 rounded-2xl flex items-center justify-center mb-6 text-purple-500 group-hover:bg-purple-500 group-hover:text-white transition-colors">
-              <Settings size={28} />
-            </div>
-            <h3 className="text-xl font-black text-gray-800">系统审计</h3>
-            <p className="text-gray-400 text-sm mt-2 leading-relaxed">查看服务器运行状态与外部调用日志。</p>
-          </div>
-        )}
-
+          <RefreshCw size={22} className="mr-3" />
+          <span>Sync Changes</span>
+        </button>
       </div>
-    </div>
+
+      <div className="mt-8 flex justify-center space-x-6">
+        <button onClick={() => onNavigate('LOGIN')} className="text-gray-400 text-xs font-bold uppercase tracking-widest hover:text-red-400 transition-colors">Logout</button>
+        <button className="text-gray-400 text-xs font-bold uppercase tracking-widest hover:text-gray-600 transition-colors">Settings</button>
+      </div>
+    </Layout>
   );
 };
 
