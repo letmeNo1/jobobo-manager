@@ -6,6 +6,8 @@ import Dashboard from './screens/Dashboard';
 import Voiceprint from './screens/Voiceprint';
 import KnowledgeBase from './screens/KnowledgeBase';
 import AdminUserManagement from './screens/AdminUserManagement.tsx';
+// 1. 别忘了导入 Settings 页面
+import Settings from './screens/Settings'; 
 
 const INITIAL_PERSONAS: Persona[] = [
   { id: '1', name: 'Standard', content: 'You are a helpful and polite AI assistant.' },
@@ -37,6 +39,10 @@ const App: React.FC = () => {
       case 'LOGIN': return <Login onNavigate={setCurrentScreen} />;
       case 'SIGNUP': return <SignUp onNavigate={setCurrentScreen} />;
       case 'ADMIN': return <AdminUserManagement onNavigate={setCurrentScreen} />;
+      
+      // 2. 添加 SETTINGS 的分支逻辑
+      case 'SETTINGS': return <Settings onNavigate={setCurrentScreen} />;
+      
       case 'DASHBOARD':
         return (
           <Dashboard 
@@ -52,12 +58,13 @@ const App: React.FC = () => {
         );
       case 'VOICEPRINT': return <Voiceprint onNavigate={setCurrentScreen} />;
       case 'KNOWLEDGE_BASE': return <KnowledgeBase onNavigate={setCurrentScreen} />;
+      
+      // 注意：如果 currentScreen 是 'SETTINGS' 但这里没写 case，就会执行下面这一行
       default: return <Login onNavigate={setCurrentScreen} />;
     }
   };
 
   return (
-    // 修改点：移除 max-w-md，增加 md 响应式断点控制
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-0 md:p-8">
       <div className="w-full max-w-full md:max-w-6xl bg-white overflow-hidden md:rounded-[40px] shadow-2xl min-h-screen md:min-h-[85vh] transition-all">
         {renderScreen()}
