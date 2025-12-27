@@ -9,86 +9,73 @@ import AdminUserManagement from './screens/AdminUserManagement';
 import Settings from './screens/Settings'; 
 
 // 初始占位符
-const INITIAL_PERSONAS: Persona[] = [
-  { id: 'default', name: 'My AI', content: '' }
-];
+const INITIAL_PERSONAS: Persona[] = [{ id: 'default', name: 'My AI', content: '' }];
 
 const App: React.FC = () => {
-  // 【关键修复 1】初始状态通过匿名函数读取本地存储
-  // 这样刷新页面时，如果已登录，会直接停留在 DASHBOARD 而不是跳回 LOGIN
   const [currentScreen, setCurrentScreen] = useState<Screen>(() => {
-    const savedUser = localStorage.getItem('user');
-    return savedUser ? 'DASHBOARD' : 'LOGIN';
+    const saved = localStorage.getItem('user');
+    return saved ? 'DASHBOARD' : 'LOGIN';
   });
 
   const [personas, setPersonas] = useState<Persona[]>(INITIAL_PERSONAS);
   const [activePersonaId, setActivePersonaId] = useState<string>(INITIAL_PERSONAS[0].id);
   const [memory, setMemory] = useState('');
 
-  // 处理人设内容更新
+  // 更新人设内容
   const handleUpdatePersona = (id: string, content: string) => {
     setPersonas(prev => prev.map(p => p.id === id ? { ...p, content } : p));
   };
 
-  // 添加新人设
+  // 添加人设
   const handleAddPersona = () => {
     const newPersona: Persona = {
       id: Date.now().toString(),
-      name: `New Persona ${personas.length + 1}`,
+      name: `Persona ${personas.length + 1}`,
       content: ''
     };
-    setPersonas(prev => [...prev, newPersona]);
+    setPersonas([...personas, newPersona]);
     setActivePersonaId(newPersona.id);
   };
 
-  // 渲染屏幕逻辑
+  // 【核心新增】删除人设逻辑
+  const handleDeletePersona = (id: string) => {
+    if (personas.length <= 1) {
+      alert("至少需要保留一个人设");
+      return;
+    }
+    const filtered = personas.filter(p => p.id !== id);
+    setPersonas(filtered);
+    // 如果删掉的是当前选中的，自动切到第一个
+    if (activePersonaId === id) {
+      setActivePersonaId(filtered[0].id);
+    }
+  };
+
   const renderScreen = () => {
     switch (currentScreen) {
-      case 'LOGIN': 
-        return <Login onNavigate={setCurrentScreen} />;
-      
-      case 'SIGNUP': 
-        return <SignUp onNavigate={setCurrentScreen} />;
-      
+      case 'LOGIN': return <Login onNavigate={setCurrentScreen} />;
       case 'DASHBOARD':
         return (
           <Dashboard 
             onNavigate={setCurrentScreen} 
-            personas={personas}
+            personas={personas} 
             setPersonas={setPersonas}
-            activePersonaId={activePersonaId}
+            activePersonaId={activePersonaId} 
             setActivePersonaId={setActivePersonaId}
-            onUpdatePersona={handleUpdatePersona}
+            onUpdatePersona={handleUpdatePersona} 
             onAddPersona={handleAddPersona}
-            memory={memory}
+            onDeletePersona={handleDeletePersona} // 传递删除函数
+            memory={memory} 
             setMemory={setMemory}
           />
         );
-
-      case 'VOICEPRINT': 
-        return <Voiceprint onNavigate={setCurrentScreen} />;
-      
-      case 'KNOWLEDGE_BASE': 
-        return <KnowledgeBase onNavigate={setCurrentScreen} />;
-      
-      case 'ADMIN': 
-        return <AdminUserManagement onNavigate={setCurrentScreen} />;
-      
-      case 'SETTINGS': 
-        return <Settings onNavigate={setCurrentScreen} />;
-
-      default: 
-        return <Login onNavigate={setCurrentScreen} />;
+      default: return <Login onNavigate={setCurrentScreen} />;
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-0 md:p-8">
-      {/* 外层容器：
-          - 移动端全屏 (w-full, min-h-screen)
-          - 桌面端带圆角和最大宽度 (max-w-6xl, md:rounded-[40px])
-      */}
-      <div className="w-full max-w-full md:max-w-6xl bg-white overflow-hidden md:rounded-[40px] shadow-2xl min-h-screen md:min-h-[85vh] transition-all relative">
+      <div className="w-full max-w-6xl bg-white md:rounded-[40px] shadow-2xl min-h-screen md:min-h-[85vh] overflow-hidden">
         {renderScreen()}
       </div>
     </div>
