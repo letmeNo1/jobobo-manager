@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
-import { LogIn, ShieldCheck } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react'; // 移除了 LogIn 图标引用
 import Input from '../components/Input';
 import { Screen } from '../types';
 import { authApi } from '../api/auth';
 import { useAuth } from '../hooks/useAuth';
+
+// --- 核心修改：引入本地图片 ---
+import logoImg from '../assets/login.png'; 
 
 interface LoginProps {
   onNavigate: (screen: Screen) => void;
@@ -23,20 +26,15 @@ const Login: React.FC<LoginProps> = ({ onNavigate }) => {
     setError('');
 
     try {
-      // 1. 调用登录 API
       const result = await authApi.login(username, password);
-      
       if (result.success) {
-        // 2. 核心修改：将后端返回的 token 一并传给 login 方法进行存储
-        // 这样 apiClient 的请求拦截器才能获取到 token
         login({ 
           username: result.username, 
           role: result.role,
-          token: result.token // <--- 必须添加这一行
+          token: result.token 
         });
       }
     } catch (err: any) {
-      // 显示来自后端或 API 层的具体错误
       setError(err.message || '登录失败，请检查网络或账号密码');
     } finally {
       setLoading(false);
@@ -46,9 +44,15 @@ const Login: React.FC<LoginProps> = ({ onNavigate }) => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-gray-50">
       <div className="w-full max-w-md bg-white rounded-[40px] p-10 shadow-xl border border-gray-100">
+        
+        {/* --- 核心修改：将图标容器改为图像容器 --- */}
         <div className="flex flex-col items-center mb-10">
-          <div className="w-20 h-20 bg-yellow-400 rounded-3xl flex items-center justify-center mb-4 shadow-lg shadow-yellow-200">
-            <LogIn size={40} className="text-gray-900" />
+          <div className="w-20 h-20 bg-yellow-400 rounded-3xl flex items-center justify-center mb-4 shadow-lg shadow-yellow-200 overflow-hidden p-2">
+            <img 
+              src={logoImg} 
+              alt="Jabobo Logo" 
+              className="w-full h-full object-contain" 
+            />
           </div>
           <h2 className="text-3xl font-black text-gray-800 tracking-tight">Jabobo</h2>
           <p className="text-gray-400 font-bold text-xs uppercase tracking-widest mt-2">Management System</p>

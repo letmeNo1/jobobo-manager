@@ -14,6 +14,7 @@ import {
 import Layout from '../components/Layout';
 import { Screen, Persona } from '../types';
 import { configApi, UserConfig } from '../api/user';
+import dashboad from '../assets/dashboad.png';
 
 interface DashboardProps {
   onNavigate: (screen: Screen) => void;
@@ -146,7 +147,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         <div className="relative mb-6">
           <div className="w-56 h-72 bg-gray-50 rounded-3xl overflow-hidden flex items-center justify-center p-4">
             <img 
-              src="https://raw.githubusercontent.com/jabra-fan/assets/main/jabra-mascot-wink.png" 
+              src={dashboad} 
               alt="Mascot" 
               className="w-full h-full object-contain"
             />
