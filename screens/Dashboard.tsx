@@ -6,11 +6,9 @@ import {
   Brain, 
   RefreshCw, 
   Plus, 
-  Settings2, 
-  Users, 
   LogOut,
   Loader2,
-  X // 引入删除图标
+  X 
 } from 'lucide-react';
 import Layout from '../components/Layout';
 import { Screen, Persona } from '../types';
@@ -25,7 +23,7 @@ interface DashboardProps {
   setActivePersonaId: (id: string) => void;
   onUpdatePersona: (id: string, content: string) => void;
   onAddPersona: () => void;
-  onDeletePersona: (id: string) => void; // 新增删除函数定义
+  onDeletePersona: (id: string) => void;
   memory: string;
   setMemory: (v: string) => void;
 }
@@ -38,7 +36,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   setActivePersonaId,
   onUpdatePersona,
   onAddPersona,
-  onDeletePersona, // 解构删除函数
+  onDeletePersona,
   memory, 
   setMemory 
 }) => {
@@ -104,9 +102,22 @@ const Dashboard: React.FC<DashboardProps> = ({
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    onNavigate('LOGIN');
+  // --- 退出登录逻辑 ---
+  const handleLogout = async () => {
+    if (window.confirm("确定要退出当前账号吗？")) {
+      try {
+        // 调用后端退出接口（需在 configApi 中定义 logout 方法）
+        // 对应后端 auth.py 的 @router.post("/logout")
+        await configApi.logout?.(); 
+      } catch (err) {
+        console.error("Logout request failed", err);
+      } finally {
+        // 无论后端是否成功，前端本地必须清理
+        localStorage.removeItem('user');
+        localStorage.removeItem('token'); // 清理 Token
+        onNavigate('LOGIN');
+      }
+    }
   };
 
   if (!currentUser) return null;
@@ -120,10 +131,19 @@ const Dashboard: React.FC<DashboardProps> = ({
             <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Welcome back</span>
             <h2 className="text-xl font-black text-gray-900">{currentUser.username}</h2>
           </div>
-          <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter ${
-            currentUser.role === 'Admin' ? 'bg-yellow-100 text-yellow-700' : 'bg-blue-100 text-blue-700'
-          }`}>
-            {currentUser.role}
+          <div className="flex items-center gap-3">
+            <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter ${
+              currentUser.role === 'Admin' ? 'bg-yellow-100 text-yellow-700' : 'bg-blue-100 text-blue-700'
+            }`}>
+              {currentUser.role}
+            </div>
+            {/* 登出按钮 */}
+            <button 
+              onClick={handleLogout}
+              className="p-2.5 bg-red-50 text-red-500 rounded-2xl hover:bg-red-100 active:scale-95 transition-all shadow-sm border border-red-100/50"
+            >
+              <LogOut size={18} />
+            </button>
           </div>
         </div>
 
@@ -164,11 +184,10 @@ const Dashboard: React.FC<DashboardProps> = ({
                   {p.name}
                 </button>
                 
-                {/* 悬浮删除按钮：只有人设多于1个时才允许删除 */}
                 {personas.length > 1 && (
                   <button
                     onClick={(e) => {
-                      e.stopPropagation(); // 阻止点击删除按钮时触发 Tab 切换
+                      e.stopPropagation();
                       if (window.confirm(`确定删除 "${p.name}" 吗？`)) {
                         onDeletePersona(p.id);
                       }
@@ -239,8 +258,6 @@ const Dashboard: React.FC<DashboardProps> = ({
           <span>{isSyncing ? 'Syncing...' : 'Sync All Changes'}</span>
         </button>
       </div>
-
-      {/* 5. 底部导航省略... */}
     </Layout>
   );
 };
