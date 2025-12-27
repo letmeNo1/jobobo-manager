@@ -1,6 +1,5 @@
-
-import React from 'react';
-import { Waves, Book, UserCircle, Brain, RefreshCw, Plus, Settings2 } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Waves, Book, UserCircle, Brain, RefreshCw, Plus, Settings2, Users } from 'lucide-react';
 import Layout from '../components/Layout';
 import { Screen, Persona } from '../types';
 
@@ -26,6 +25,22 @@ const Dashboard: React.FC<DashboardProps> = ({
   setMemory 
 }) => {
   const activePersona = personas.find(p => p.id === activePersonaId) || personas[0];
+  
+  // 新增：用于存储当前登录用户的信息
+  const [currentUser, setCurrentUser] = useState<{ username: string; role: string } | null>(null);
+
+  useEffect(() => {
+    // 获取登录时保存的用户信息
+    const savedUser = localStorage.getItem('user');
+    if (savedUser) {
+      setCurrentUser(JSON.parse(savedUser));
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    onNavigate('LOGIN');
+  };
 
   return (
     <Layout className="bg-gray-50 pb-8">
@@ -33,13 +48,11 @@ const Dashboard: React.FC<DashboardProps> = ({
       <div className="bg-white p-6 pb-12 rounded-b-[40px] shadow-sm mb-6 flex flex-col items-center">
         <div className="relative mb-6">
           <div className="w-56 h-72 bg-gray-50 rounded-3xl overflow-hidden flex items-center justify-center p-4">
-            {/* Mascot Image from prompt reference */}
             <img 
               src="https://raw.githubusercontent.com/jabra-fan/assets/main/jabra-mascot-wink.png" 
               alt="Jobobo Mascot" 
               className="w-full h-full object-contain"
               onError={(e) => {
-                // Fallback to a stylistically similar placeholder if the specific URL isn't reachable
                 (e.target as HTMLImageElement).src = "https://img.freepik.com/free-vector/cute-robot-waving-hand-cartoon-character-illustration_138676-2744.jpg";
               }}
             />
@@ -52,6 +65,10 @@ const Dashboard: React.FC<DashboardProps> = ({
             JOBOBO
           </div>
         </div>
+        {/* 显示当前用户名 */}
+        {currentUser && (
+          <p className="text-gray-400 text-xs font-bold">Logged in as: {currentUser.username}</p>
+        )}
       </div>
 
       {/* 1. Persona Customization Section */}
@@ -70,7 +87,6 @@ const Dashboard: React.FC<DashboardProps> = ({
             </button>
           </div>
 
-          {/* Persona Switcher Chips */}
           <div className="flex space-x-2 overflow-x-auto pb-4 no-scrollbar">
             {personas.map(p => (
               <button
@@ -112,7 +128,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         </div>
       </div>
 
-      {/* 3. Action Buttons Section (Voiceprint & Knowledge Base) */}
+      {/* 3. Action Buttons Section */}
       <div className="px-6 grid grid-cols-2 gap-4 mb-6">
         <button 
           onClick={() => onNavigate('VOICEPRINT')}
@@ -148,9 +164,29 @@ const Dashboard: React.FC<DashboardProps> = ({
         </button>
       </div>
 
-      <div className="mt-8 flex justify-center space-x-6">
-        <button onClick={() => onNavigate('LOGIN')} className="text-gray-400 text-xs font-bold uppercase tracking-widest hover:text-red-400 transition-colors">Logout</button>
-        <button className="text-gray-400 text-xs font-bold uppercase tracking-widest hover:text-gray-600 transition-colors">Settings</button>
+      {/* 底部导航按钮区域 */}
+      <div className="mt-8 flex justify-center items-center space-x-6">
+        <button 
+          onClick={handleLogout} 
+          className="text-gray-400 text-xs font-bold uppercase tracking-widest hover:text-red-400 transition-colors"
+        >
+          Logout
+        </button>
+
+        {/* 关键修改：如果是 Admin，显示用户管理入口 */}
+        {currentUser?.role === 'Admin' && (
+          <button 
+            onClick={() => onNavigate('ADMIN')}
+            className="flex items-center text-yellow-600 text-xs font-bold uppercase tracking-widest hover:text-yellow-700 transition-colors border-l border-gray-200 pl-6"
+          >
+            <Users size={14} className="mr-1" />
+            User Management
+          </button>
+        )}
+
+        <button className="text-gray-400 text-xs font-bold uppercase tracking-widest hover:text-gray-600 transition-colors">
+          Settings
+        </button>
       </div>
     </Layout>
   );
