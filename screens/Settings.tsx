@@ -37,10 +37,11 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
     setMessage(null);
 
     try {
-      const res = await userManagementApi.updatePassword({
-        username: currentUser.username,
-        new_password: newPassword
-      });
+        // 显式传递对象
+        const res = await userManagementApi.updatePassword({
+          username: currentUser.username,
+          new_password: newPassword  // 确保这里的变量名是 newPassword
+    });
 
       if (res.success) {
         setMessage({ type: 'success', text: '密码已成功更新！' });
