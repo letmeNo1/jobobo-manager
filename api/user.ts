@@ -9,14 +9,11 @@ export interface User {
   token?: string;
 }
 
-/**
- * 业务配置数据模型：包含 4 个核心字段
- */
 export interface UserConfig {
-  persona: string;       // 人设文本
-  memory: string;        // 记忆文本
-  voice_status: string;  // 声纹状态描述
-  kb_status: string;     // 知识库状态描述
+  persona: string;
+  memory: string;
+  voice_status: string;
+  kb_status: string;
 }
 
 export interface ApiResponse<T = any> {
@@ -27,6 +24,7 @@ export interface ApiResponse<T = any> {
   token?: string; 
   username?: string;
   role?: string;
+  jabobo_ids?: string[];
 }
 
 /**
@@ -40,7 +38,8 @@ export const authApi = {
 };
 
 /**
- * 2. 用户管理接口 (Admin & Settings)
+ * 2. 用户管理接口 (AdminUserManagement.tsx 调用)
+ * 👈 修复你报错的关键点：确保这个对象被导出
  */
 export const userManagementApi = {
   getUsers: async (): Promise<ApiResponse<User[]>> => {
@@ -62,22 +61,31 @@ export const userManagementApi = {
 };
 
 /**
- * 3. 核心新增：业务配置接口 (查询与全量同步)
+ * 3. 捷宝宝核心业务接口 (JaboboSelector 和 Dashboard 调用)
  */
-export const configApi = {
-  /** * 获取当前登录用户的全量配置
-   */
-  getUserConfig: async (): Promise<ApiResponse<UserConfig>> => {
-    const response = await apiClient.get('/user/config');
+export const jaboboApi = {
+  getJaboboIds: async (): Promise<ApiResponse> => {
+    const response = await apiClient.get('/user/jabobo_ids');
     return response.data;
   },
-
-  /** * 一键同步：同时更新人设、记忆、声纹状态和知识库状态
-   * 传入的 data 必须符合 UserConfig 接口定义
-   */
-  syncConfig: async (data: UserConfig): Promise<ApiResponse> => {
-    // 发送 POST 请求到后端的 sync-config 路由
-    const response = await apiClient.post('/user/sync-config', data);
+  bindJabobo: async (jaboboId: string): Promise<ApiResponse> => {
+    const response = await apiClient.post('/user/bind', { jabobo_id: jaboboId });
+    return response.data;
+  },
+  getUserConfig: async (jaboboId: string): Promise<ApiResponse<UserConfig>> => {
+    const response = await apiClient.get('/user/config', { 
+      params: { jabobo_id: jaboboId } 
+    });
+    return response.data;
+  },
+  syncConfig: async (jaboboId: string, data: UserConfig): Promise<ApiResponse> => {
+    const response = await apiClient.post('/user/sync-config', {
+      jabobo_id: jaboboId,
+      ...data
+    });
     return response.data;
   }
 };
+
+// 别名导出，确保之前用 configApi 的代码不报错
+export const configApi = jaboboApi;
