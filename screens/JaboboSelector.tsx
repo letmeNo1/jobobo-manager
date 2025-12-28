@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Cpu, LogOut, Link as LinkIcon, X, Loader2 } from 'lucide-react';
 import Layout from '../components/Layout';
 import { Screen } from '../types';
-import { jaboboApi } from '../api/user'; // 👈 引入 API
+import { jaboboManager } from '../api/jabobo_manager'; // 👈 引入 API
 
 interface JaboboSelectorProps {
   onSelect: (uuid: string) => void;
@@ -24,7 +24,7 @@ const JaboboSelector: React.FC<JaboboSelectorProps> = ({ onSelect, onNavigate })
   const fetchJaboboList = async () => {
     setIsLoading(true);
     try {
-      const res = await jaboboApi.getJaboboIds(); // 调用 API 获取 ID 列表
+      const res = await jaboboManager.getJaboboIds(); // 调用 API 获取 ID 列表
       if (res.success && Array.isArray(res.jabobo_ids)) {
         setUuids(res.jabobo_ids);
       }
@@ -41,7 +41,7 @@ const JaboboSelector: React.FC<JaboboSelectorProps> = ({ onSelect, onNavigate })
     if (!val) return;
     
     try {
-      const res = await jaboboApi.bindJabobo(val); // 调用后端绑定接口
+      const res = await jaboboManager.bindJabobo(val); // 调用后端绑定接口
       if (res.success) {
         await fetchJaboboList(); // 成功后重新拉取列表
         setIsBinding(false);

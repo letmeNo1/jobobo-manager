@@ -15,7 +15,8 @@ import {
 } from 'lucide-react';
 import Layout from '../components/Layout';
 import { Screen, Persona } from '../types';
-import { configApi, UserConfig } from '../api/user';
+import { UserConfig } from '../api/user';
+import { JaboboConfig } from '../api/jabobo_congfig';
 
 interface DashboardProps {
   jaboboId: string; // 逻辑接入：当前操作的设备ID
@@ -63,7 +64,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   const fetchServerConfig = async () => {
     try {
       // 2. 逻辑修复：getUserConfig 必须接收并发送 jaboboId
-      const res = await configApi.getUserConfig(jaboboId);
+      const res = await JaboboConfig.getUserConfig(jaboboId);
       if (res.success && res.data) {
         const rawPersona = res.data.persona;
         try {
@@ -99,7 +100,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         kb_status: kbStatus
       };
       // 3. 逻辑修复：syncConfig 同时传入 ID 和数据负载
-      const res = await configApi.syncConfig(jaboboId, payload);
+      const res = await JaboboConfig.syncConfig(jaboboId, payload);
       if (res.success) {
         alert("✨ 数据同步成功！");
       }

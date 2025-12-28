@@ -38,8 +38,7 @@ export const authApi = {
 };
 
 /**
- * 2. 用户管理接口 (AdminUserManagement.tsx 调用)
- * 👈 修复你报错的关键点：确保这个对象被导出
+ * 2. 用户管理接口 (Admin 页面使用)
  */
 export const userManagementApi = {
   getUsers: async (): Promise<ApiResponse<User[]>> => {
@@ -50,6 +49,7 @@ export const userManagementApi = {
     const response = await apiClient.post('/users', data);
     return response.data;
   },
+  // 👈 逻辑补全：删除用户
   deleteUser: async (username: string): Promise<ApiResponse> => {
     const response = await apiClient.delete(`/users/${username}`);
     return response.data;
@@ -59,33 +59,3 @@ export const userManagementApi = {
     return response.data;
   }
 };
-
-/**
- * 3. 捷宝宝核心业务接口 (JaboboSelector 和 Dashboard 调用)
- */
-export const jaboboApi = {
-  getJaboboIds: async (): Promise<ApiResponse> => {
-    const response = await apiClient.get('/user/jabobo_ids');
-    return response.data;
-  },
-  bindJabobo: async (jaboboId: string): Promise<ApiResponse> => {
-    const response = await apiClient.post('/user/bind', { jabobo_id: jaboboId });
-    return response.data;
-  },
-  getUserConfig: async (jaboboId: string): Promise<ApiResponse<UserConfig>> => {
-    const response = await apiClient.get('/user/config', { 
-      params: { jabobo_id: jaboboId } 
-    });
-    return response.data;
-  },
-  syncConfig: async (jaboboId: string, data: UserConfig): Promise<ApiResponse> => {
-    const response = await apiClient.post('/user/sync-config', {
-      jabobo_id: jaboboId,
-      ...data
-    });
-    return response.data;
-  }
-};
-
-// 别名导出，确保之前用 configApi 的代码不报错
-export const configApi = jaboboApi;
