@@ -11,7 +11,8 @@ import {
   LogOut,
   Loader2,
   ChevronLeft,
-  Cpu
+  Cpu,
+  X // 👈 导入 X 图标用于删除
 } from 'lucide-react';
 import Layout from '../components/Layout';
 import { Screen, Persona } from '../types';
@@ -20,7 +21,7 @@ import { JaboboConfig } from '../api/jabobo_congfig';
 import dashboadImg from '../assets/dashboad.png'; 
 
 interface DashboardProps {
-  jaboboId: string; // 逻辑接入：当前操作的设备ID
+  jaboboId: string; 
   onNavigate: (screen: Screen) => void;
   personas: Persona[];
   setPersonas: React.Dispatch<React.SetStateAction<Persona[]>>;
@@ -28,6 +29,7 @@ interface DashboardProps {
   setActivePersonaId: (id: string) => void;
   onUpdatePersona: (id: string, content: string) => void;
   onAddPersona: () => void;
+  onDeletePersona: (id: string) => void; // 👈 注入删除方法
   memory: string;
   setMemory: (v: string) => void;
 }
@@ -41,6 +43,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   setActivePersonaId,
   onUpdatePersona,
   onAddPersona,
+  onDeletePersona, // 👈 逻辑接入
   memory, 
   setMemory 
 }) => {
@@ -51,7 +54,6 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [voiceStatus, setVoiceStatus] = useState('加载中...');
   const [kbStatus, setKbStatus] = useState('加载中...');
 
-  // 1. 逻辑接入：当 jaboboId 改变时（比如从列表切换回来），重新加载数据
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
     if (savedUser) {
@@ -60,11 +62,10 @@ const Dashboard: React.FC<DashboardProps> = ({
     } else {
       onNavigate('LOGIN');
     }
-  }, [jaboboId]); // 👈 监听 ID 变化
+  }, [jaboboId]);
 
   const fetchServerConfig = async () => {
     try {
-      // 2. 逻辑修复：getUserConfig 必须接收并发送 jaboboId
       const res = await JaboboConfig.getUserConfig(jaboboId);
       if (res.success && res.data) {
         const rawPersona = res.data.persona;
@@ -100,7 +101,6 @@ const Dashboard: React.FC<DashboardProps> = ({
         voice_status: voiceStatus,
         kb_status: kbStatus
       };
-      // 3. 逻辑修复：syncConfig 同时传入 ID 和数据负载
       const res = await JaboboConfig.syncConfig(jaboboId, payload);
       if (res.success) {
         alert("✨ 数据同步成功！");
@@ -122,7 +122,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   return (
     <Layout className="bg-gray-50 pb-12">
-      {/* 顶部逻辑区：保持你的黄色风格 */}
+      {/* 顶部逻辑区 */}
       <div className="bg-white px-6 pt-6 flex justify-between items-center">
         <button 
           onClick={() => onNavigate('SELECT_JABOBO')} 
@@ -137,7 +137,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         </div>
       </div>
 
-      {/* 100% 还原：用户信息 */}
+      {/* 用户信息区 */}
       <div className="bg-white p-6 pb-12 rounded-b-[40px] shadow-sm mb-6 flex flex-col items-center">
         <div className="w-full flex justify-between items-center mb-4 px-2">
           <div className="flex flex-col">
@@ -165,7 +165,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         </div>
       </div>
 
-      {/* 100% 还原：多人设 Tab 切换区 */}
+      {/* 人设定制区 - 包含删除逻辑 */}
       <div className="px-6 mb-4">
         <div className="bg-white p-5 rounded-[24px] shadow-sm border border-white">
           <div className="flex items-center justify-between mb-4">
@@ -180,17 +180,40 @@ const Dashboard: React.FC<DashboardProps> = ({
           
           <div className="flex space-x-2 overflow-x-auto pb-4 no-scrollbar">
             {personas.map(p => (
-              <button
-                key={p.id}
-                onClick={() => setActivePersonaId(p.id)}
-                className={`flex-shrink-0 px-4 py-2 rounded-xl text-xs font-black transition-all ${
-                  activePersonaId === p.id 
-                    ? 'bg-yellow-400 text-gray-900 shadow-sm' 
-                    : 'bg-gray-50 text-gray-400 border border-gray-100'
-                }`}
-              >
-                {p.name}
-              </button>
+              <div key={p.id} className="relative group flex-shrink-0 pt-1 pr-1">
+                {/* 人设标签按钮 */}
+                <button
+                  onClick={() => setActivePersonaId(p.id)}
+                  className={`flex-shrink-0 px-4 py-2 rounded-xl text-xs font-black transition-all ${
+                    activePersonaId === p.id 
+                      ? 'bg-yellow-400 text-gray-900 shadow-sm border border-yellow-400' 
+                      : 'bg-gray-50 text-gray-400 border border-gray-100'
+                  }`}
+                >
+                  {p.name}
+                </button>
+
+                {/* 删除按钮逻辑：
+                    1. personas.length > 1：确保至少保留一个
+                    2. group-hover:opacity-100：仅在悬停父级 div 时显示
+                    3. opacity-0：常态下完全透明隐藏
+                */}
+                {personas.length > 1 && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation(); // 防止触发标签切换
+                      if (window.confirm(`确定删除人设 "${p.name}" 吗？`)) {
+                        onDeletePersona(p.id);
+                      }
+                    }}
+                    className="absolute -top-1 -right-1 p-1 bg-red-500 text-white rounded-full shadow-lg 
+                              opacity-0 group-hover:opacity-100 transition-opacity duration-200 
+                              active:scale-90 z-10"
+                  >
+                    <X size={10} strokeWidth={4} />
+                  </button>
+                )}
+              </div>
             ))}
           </div>
 
@@ -203,7 +226,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         </div>
       </div>
 
-      {/* 100% 还原：记忆输入 */}
+      {/* 记忆输入 */}
       <div className="px-6 mb-6">
         <div className="bg-white p-5 rounded-[24px] shadow-sm border border-white">
           <div className="flex items-center mb-3 text-yellow-500">
@@ -219,7 +242,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         </div>
       </div>
 
-      {/* 100% 还原：状态按钮 */}
+      {/* 状态按钮 */}
       <div className="px-6 grid grid-cols-2 gap-4 mb-8">
         <button onClick={() => onNavigate('VOICEPRINT')} className="bg-white p-6 rounded-[28px] shadow-sm flex flex-col items-center hover:shadow-md active:scale-95 border border-white relative">
           <div className={`absolute top-4 right-4 w-2 h-2 rounded-full ${voiceStatus === '已就绪' ? 'bg-green-500' : 'bg-gray-300'}`} />
@@ -240,7 +263,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         </button>
       </div>
 
-      {/* 100% 还原：同步按钮 */}
+      {/* 同步按钮 */}
       <div className="px-6 mb-12">
         <button 
           onClick={handleSync}
@@ -252,7 +275,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         </button>
       </div>
 
-      {/* 100% 还原：底部导航 */}
+      {/* 底部导航 */}
       <div className="px-6 border-t border-gray-100 pt-8 flex flex-wrap justify-center items-center gap-y-4 gap-x-8">
         <button onClick={() => onNavigate('SETTINGS')} className="flex items-center text-gray-400 text-[10px] font-black uppercase tracking-widest hover:text-gray-900">
           <Settings2 size={16} className="mr-2" />
