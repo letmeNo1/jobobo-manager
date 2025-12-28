@@ -17,6 +17,7 @@ import Layout from '../components/Layout';
 import { Screen, Persona } from '../types';
 import { UserConfig } from '../api/user';
 import { JaboboConfig } from '../api/jabobo_congfig';
+import dashboadImg from '../assets/dashboad.png'; 
 
 interface DashboardProps {
   jaboboId: string; // 逻辑接入：当前操作的设备ID
@@ -153,7 +154,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         <div className="relative mb-6">
           <div className="w-56 h-72 bg-gray-50 rounded-3xl overflow-hidden flex items-center justify-center p-4">
             <img 
-              src="https://raw.githubusercontent.com/jabra-fan/assets/main/jabra-mascot-wink.png" 
+              src={dashboadImg} 
               alt="Mascot" 
               className="w-full h-full object-contain"
             />

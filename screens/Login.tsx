@@ -4,8 +4,6 @@ import Input from '../components/Input';
 import { Screen } from '../types';
 import { authApi } from '../api/auth';
 import { useAuth } from '../hooks/useAuth';
-
-// --- 核心修改：引入本地图片 ---
 import logoImg from '../assets/login.png'; 
 
 interface LoginProps {
