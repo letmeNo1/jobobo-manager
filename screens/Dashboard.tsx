@@ -179,6 +179,24 @@ const Dashboard: React.FC<DashboardProps> = ({
         </div>
       </div>
 
+       <div className="px-6 grid grid-cols-2 gap-4 mb-8">
+        <button onClick={() => onNavigate('VOICEPRINT')} className="bg-white p-6 rounded-[28px] shadow-sm flex flex-col items-center hover:shadow-md transition-all active:scale-95 border border-white">
+          <div className="w-12 h-12 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center mb-3">
+            <Waves size={24} />
+          </div>
+          <span className="font-black text-gray-800 text-xs">声纹设置</span>
+          <span className="text-[9px] text-gray-300 mt-1 font-bold uppercase tracking-widest">Voice</span>
+        </button>
+
+        <button onClick={() => onNavigate('KNOWLEDGE_BASE')} className="bg-white p-6 rounded-[28px] shadow-sm flex flex-col items-center hover:shadow-md transition-all active:scale-95 border border-white">
+          <div className="w-12 h-12 bg-purple-50 text-purple-500 rounded-2xl flex items-center justify-center mb-3">
+            <Book size={24} />
+          </div>
+          <span className="font-black text-gray-800 text-xs">知识库</span>
+          <span className="text-[9px] text-gray-300 mt-1 font-bold uppercase tracking-widest">Library</span>
+        </button>
+      </div>
+
       <div className="px-6 mb-12">
         <button onClick={handleSync} disabled={isSyncing} className="w-full bg-yellow-400 py-5 rounded-3xl flex items-center justify-center font-black text-lg shadow-xl active:scale-[0.98] disabled:opacity-70 text-gray-900 transition-all">
           {isSyncing ? <Loader2 size={22} className="mr-3 animate-spin" /> : <RefreshCw size={22} className="mr-3" />}
