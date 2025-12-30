@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Cpu, LogOut, Link as LinkIcon, X, Loader2 } from 'lucide-react';
+import { Plus, Cpu, LogOut, Link as LinkIcon, X, Loader2, Trash2 } from 'lucide-react';
 import Layout from '../components/Layout';
 import { Screen } from '../types';
 import { jaboboManager } from '../api/jabobo_manager'; // 👈 引入 API
@@ -15,6 +15,9 @@ const JaboboSelector: React.FC<JaboboSelectorProps> = ({ onSelect, onNavigate })
   const [isLoading, setIsLoading] = useState(true);
   const [isBinding, setIsBinding] = useState(false);
   const [inputUuid, setInputUuid] = useState('');
+  // 新增状态：删除确认、删除加载中
+  const [deleteConfirmUuid, setDeleteConfirmUuid] = useState<string | null>(null);
+  const [deletingUuid, setDeletingUuid] = useState<string | null>(null);
 
   // 2. 获取数据：组件加载时向后端请求“我有几个捷宝宝”
   useEffect(() => {
@@ -54,6 +57,31 @@ const JaboboSelector: React.FC<JaboboSelectorProps> = ({ onSelect, onNavigate })
     }
   };
 
+  // 新增：删除设备逻辑
+  const handleDelete = async (uuid: string) => {
+    // 防止重复点击
+    if (deletingUuid === uuid) return;
+    
+    setDeletingUuid(uuid);
+    try {
+      // 调用后端删除接口（需确保 jaboboManager 有该方法）
+      const res = await jaboboManager.unbindJabobo(uuid);
+      if (res.success) {
+        // 前端移除该设备
+        setUuids(prev => prev.filter(item => item !== uuid));
+        alert("设备删除成功");
+      } else {
+        alert(res.message || "设备删除失败");
+      }
+    } catch (err) {
+      console.error("删除设备失败:", err);
+      alert("网络错误，删除失败");
+    } finally {
+      setDeletingUuid(null);
+      setDeleteConfirmUuid(null); // 关闭确认弹窗
+    }
+  };
+
   return (
     <Layout className="bg-white h-full flex flex-col p-8 md:p-12">
       {/* 顶部标题栏 - 保持你的原始设计 */}
@@ -82,14 +110,61 @@ const JaboboSelector: React.FC<JaboboSelectorProps> = ({ onSelect, onNavigate })
             {uuids.map(uuid => (
               <div 
                 key={uuid} 
-                onClick={() => onSelect(uuid)}
-                className="group bg-gray-50 border-2 border-transparent hover:border-yellow-400 p-10 rounded-[40px] transition-all cursor-pointer shadow-sm hover:shadow-xl"
+                className="group bg-gray-50 border-2 border-transparent hover:border-yellow-400 p-10 rounded-[40px] transition-all cursor-pointer shadow-sm hover:shadow-xl relative"
               >
-                <div className="w-20 h-20 bg-gray-900 rounded-[24px] flex items-center justify-center text-yellow-400 mb-8 group-hover:scale-110 transition-transform shadow-lg">
-                  <Cpu size={40} />
+                {/* 设备卡片点击选择逻辑（排除删除按钮区域） */}
+                <div 
+                  onClick={(e) => {
+                    // 阻止删除按钮的点击冒泡到卡片选择
+                    if (!e.target.closest('.delete-btn')) {
+                      onSelect(uuid);
+                    }
+                  }}
+                  className="h-full w-full"
+                >
+                  <div className="w-20 h-20 bg-gray-900 rounded-[24px] flex items-center justify-center text-yellow-400 mb-8 group-hover:scale-110 transition-transform shadow-lg">
+                    <Cpu size={40} />
+                  </div>
+                  <div className="font-black text-2xl text-gray-900 italic tracking-tight mb-2 uppercase">Jabobo Unit</div>
+                  <div className="font-mono text-sm text-gray-400 font-bold tracking-widest">{uuid}</div>
                 </div>
-                <div className="font-black text-2xl text-gray-900 italic tracking-tight mb-2 uppercase">Jabobo Unit</div>
-                <div className="font-mono text-sm text-gray-400 font-bold tracking-widest">{uuid}</div>
+
+                {/* 新增：删除按钮 - 悬浮显示 */}
+                <button 
+                  className="delete-btn absolute top-6 right-6 p-2 text-gray-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 z-10"
+                  onClick={(e) => {
+                    e.stopPropagation(); // 阻止冒泡到卡片选择
+                    setDeleteConfirmUuid(uuid);
+                  }}
+                >
+                  <Trash2 size={20} />
+                </button>
+
+                {/* 新增：删除确认弹窗 - 条件渲染 */}
+                {deleteConfirmUuid === uuid && (
+                  <div className="absolute inset-0 bg-black/70 rounded-[40px] flex flex-col items-center justify-center z-20 animate-in fade-in-50">
+                    <p className="text-white font-bold text-sm mb-4 text-center">确认删除该设备？</p>
+                    <div className="flex gap-4">
+                      <button 
+                        onClick={() => setDeleteConfirmUuid(null)}
+                        className="bg-gray-200 text-gray-800 px-6 py-2 rounded-xl font-black text-xs uppercase"
+                      >
+                        取消
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(uuid)}
+                        disabled={deletingUuid === uuid}
+                        className="bg-red-500 text-white px-6 py-2 rounded-xl font-black text-xs uppercase active:scale-95 transition-all"
+                      >
+                        {deletingUuid === uuid ? (
+                          <Loader2 size={16} className="animate-spin mx-auto" />
+                        ) : (
+                          "删除"
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
 
