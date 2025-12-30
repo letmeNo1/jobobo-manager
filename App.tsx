@@ -52,6 +52,9 @@ const App: React.FC = () => {
   };
 
   const renderScreen = () => {
+    // 提取公共 ID 以便复用
+    const currentId = selectedUuid || '';
+
     switch (currentScreen) {
       case 'SELECT_JABOBO': 
         return <JaboboSelector 
@@ -64,10 +67,11 @@ const App: React.FC = () => {
           }} 
           onNavigate={setCurrentScreen} 
         />;
+      
       case 'DASHBOARD':
         return (
           <Dashboard 
-            jaboboId={selectedUuid || ''}
+            jaboboId={currentId}
             onNavigate={(screen) => {
               if (screen === 'SELECT_JABOBO') {
                 localStorage.removeItem('active_jabobo_uuid');
@@ -86,10 +90,25 @@ const App: React.FC = () => {
             setMemory={setMemory}
           />
         );
+
+      case 'KNOWLEDGE_BASE': 
+        return (
+          <KnowledgeBase 
+            jaboboId={currentId} // ✨ 修复：传递选中的设备 ID
+            onNavigate={setCurrentScreen} 
+          />
+        );
+
+      case 'VOICEPRINT': 
+        return (
+          <Voiceprint 
+            jaboboId={currentId} // ✨ 修复：传递选中的设备 ID
+            onNavigate={setCurrentScreen} 
+          />
+        );
+
       case 'LOGIN': return <Login onNavigate={setCurrentScreen} />;
       case 'SIGNUP': return <SignUp onNavigate={setCurrentScreen} />;
-      case 'VOICEPRINT': return <Voiceprint onNavigate={setCurrentScreen} />;
-      case 'KNOWLEDGE_BASE': return <KnowledgeBase onNavigate={setCurrentScreen} />;
       case 'ADMIN': return <AdminUserManagement onNavigate={setCurrentScreen} />;
       case 'SETTINGS': return <Settings onNavigate={setCurrentScreen} />;
       default: return <Login onNavigate={setCurrentScreen} />;
