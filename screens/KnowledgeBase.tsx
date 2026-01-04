@@ -2,29 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, UploadCloud, FileText, Trash2, ShieldAlert, Loader2, Inbox } from 'lucide-react';
 import Layout from '../components/Layout';
 import { Screen, Document } from '../types';
-import { JaboboKnownledgeBase } from '../api/jabobo_knowledge_base';
+import { JaboboKnownledgeBase, BackendFileInfo, ApiResponse } from '../api/jabobo_knowledge_base';
 
 interface KnowledgeBaseProps {
   jaboboId: string;
   onNavigate: (screen: Screen) => void;
-}
-
-// 补充后端返回的文件信息类型（对齐后端结构）
-interface BackendFileInfo {
-  file_path: string;       // 文件绝对路径
-  file_name: string;       // 文件名
-  file_size_bytes: number; // 文件大小（字节）
-  file_size_mb: number;    // 文件大小（MB）
-  upload_time: string;     // 上传时间
-  upload_timestamp: number;// 时间戳
-  status?: string;         // 文件状态
-}
-
-interface ListKBResponse {
-  success: boolean;
-  total_count: number;
-  kb_list: BackendFileInfo[];
-  message: string;
 }
 
 const KnowledgeBase: React.FC<KnowledgeBaseProps> = ({ jaboboId, onNavigate }) => {
@@ -45,32 +27,32 @@ const KnowledgeBase: React.FC<KnowledgeBaseProps> = ({ jaboboId, onNavigate }) =
     fetchFileList();
   }, [jaboboId]);
 
-  // 修复：修正后端返回字段解析 + 字段映射
+  // 简化的列表获取逻辑（使用新的API封装）
   const fetchFileList = async () => {
     if (!jaboboId) return;
     setIsLoading(true);
     try {
-      // 1. 调用列表接口（确保JaboboConfig.listKnowledgeBase正确传参）
       const res = await JaboboKnownledgeBase.listKnowledgeBase(jaboboId);
-      console.log('后端列表接口返回:', res); // 调试用：查看真实返回数据
+      console.log('后端列表接口返回:', res);
 
-      // 2. 修正：读取后端实际返回的kb_list字段（而非files）
       if (res.success && res.kb_list && Array.isArray(res.kb_list)) {
-        // 3. 修正：字段映射（对齐后端返回的字段名）
         const mappedDocs: Document[] = res.kb_list.map((file: BackendFileInfo) => ({
-          id: file.file_path, // 用绝对路径作为唯一ID（避免文件名重复）
-          name: file.file_name, // 后端返回的是file_name，不是name
-          size: formatFileSize(file.file_size_bytes), // 用字节数格式化，不是直接用file.size
-          date: file.upload_time || '未知时间', // 后端返回的是upload_time
-          filePath: file.file_path // 新增：存储绝对路径，用于删除
+          id: file.file_path,
+          name: file.file_name,
+          size: formatFileSize(file.file_size_bytes),
+          date: file.upload_time || '未知时间',
+          filePath: file.file_path
         }));
         setDocs(mappedDocs);
-        console.log('映射后的文件列表:', mappedDocs); // 调试用
       } else {
-        setDocs([]); // 无数据时清空
+        setDocs([]);
+        if (res.message) {
+          console.warn('后端返回提示:', res.message);
+        }
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("获取列表失败:", err);
+      alert(`加载文件列表失败: ${err.message || '网络异常'}`);
       setDocs([]);
     } finally {
       setIsLoading(false);
@@ -84,7 +66,7 @@ const KnowledgeBase: React.FC<KnowledgeBaseProps> = ({ jaboboId, onNavigate }) =
 
     // 校验文件格式
     const allowedExtensions = ['.pdf', '.txt'];
-    const fileExt = '.' + file.name.split('.').pop()?.toLowerCase();
+    const fileExt = '.' + (file.name.split('.').pop() || '').toLowerCase();
     if (!allowedExtensions.includes(fileExt)) {
       alert("❌ 只允许上传 PDF 或 TXT 文件");
       return;
@@ -98,41 +80,44 @@ const KnowledgeBase: React.FC<KnowledgeBaseProps> = ({ jaboboId, onNavigate }) =
 
     setIsUploading(true);
     try {
-      const res = await JaboboKnownledgeBase.uploadKnowledgeBase(jaboboId, file);
+      const res: ApiResponse = await JaboboKnownledgeBase.uploadKnowledgeBase(jaboboId, file);
+      
       if (res.success) {
         alert("✨ 知识库同步成功！");
-        await fetchFileList(); // 重新加载列表
+        await fetchFileList(); // 重新加载列表（无304缓存问题）
       } else {
-        alert("上传失败: " + (res.message || "未知错误"));
+        alert("上传失败: " + (res.message || res.detail || "未知错误"));
       }
     } catch (err: any) {
-      alert("网络错误: " + (err.message || "上传失败"));
+      console.error("上传失败详情:", err);
+      alert(`网络错误: ${err.message || "上传失败，请检查后端接口是否正常"}`);
     } finally {
       setIsUploading(false);
       e.target.value = ""; // 重置文件选择框
     }
   };
 
-  // 修复：删除时传递文件绝对路径（而非仅文件名）
   const handleDelete = async (filePath: string, fileName: string) => {
     if (!window.confirm(`确定要删除 ${fileName} 吗？`)) return;
     try {
-      // 调用删除接口时，传递filePath（绝对路径）
-      const res = await JaboboKnownledgeBase.deleteKnowledgeBase(jaboboId, filePath);
+      const res: ApiResponse = await JaboboKnownledgeBase.deleteKnowledgeBase(jaboboId, filePath);
+      
       if (res.success) {
         alert("✅ 文件删除成功！");
         await fetchFileList(); // 重新加载列表
       } else {
-        alert("删除失败: " + (res.message || "未知错误"));
+        alert("删除失败: " + (res.message || res.detail || "未知错误"));
       }
     } catch (err) {
       console.error("删除失败:", err);
-      alert("删除失败，请重试");
+      alert(`删除失败: ${(err as Error).message}`);
     }
   };
 
+  // 组件渲染部分（无变化，省略）
   return (
     <Layout className="bg-white">
+      {/* 原有渲染代码，完全复用 */}
       <div className="p-6">
         <button 
           onClick={() => onNavigate('DASHBOARD')} 
@@ -183,7 +168,6 @@ const KnowledgeBase: React.FC<KnowledgeBaseProps> = ({ jaboboId, onNavigate }) =
                   <h4 className="text-sm font-bold text-gray-800 truncate">{doc.name}</h4>
                   <p className="text-[10px] text-gray-400 uppercase tracking-wide">{doc.size} • {doc.date}</p>
                 </div>
-                {/* 修复：传递filePath和fileName给删除函数 */}
                 <button 
                   onClick={() => handleDelete(doc.filePath, doc.name)} 
                   className="p-2 text-gray-300 hover:text-red-500 transition-colors"
