@@ -1,22 +1,7 @@
+import { ListKnowledgeBaseResponse } from "@/types";
 import apiClient from "./apiClient";
 
-// --- 类型定义保持不变 ---
-export interface BackendFileInfo {
-  file_path: string;
-  file_name: string;
-  file_size_bytes: number;
-  file_size_mb: number;
-  upload_time: string;
-  upload_timestamp: number;
-  status?: string;
-}
 
-export interface ListKnowledgeBaseResponse {
-  success: boolean;
-  total_count: number;
-  kb_list: BackendFileInfo[];
-  message: string;
-}
 
 export const JaboboKnownledgeBase = {
   // 1. 修正路径为 /user/list-kb

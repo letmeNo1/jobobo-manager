@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, UploadCloud, FileText, Trash2, ShieldAlert, Loader2, Inbox } from 'lucide-react';
 import Layout from '../components/Layout';
-import { Screen, Document } from '../types';
-import { JaboboKnownledgeBase, BackendFileInfo } from '../api/jabobo_knowledge_base';
+import { Screen, Document, BackendFileInfo } from '../types';
+import { JaboboKnownledgeBase } from '../api/jabobo_knowledge_base';
 
 interface KnowledgeBaseProps {
   jaboboId: string;

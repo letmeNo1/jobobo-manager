@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Cpu, LogOut, Link as LinkIcon, X, Loader2, Trash2 } from 'lucide-react';
 import Layout from '../components/Layout';
 import { Screen } from '../types';
-import { jaboboManager } from '../api/jabobo_manager'; // 👈 引入 API
+import { jaboboManager } from '../api/jabobo_manager';
 
 interface JaboboSelectorProps {
   onSelect: (uuid: string) => void;

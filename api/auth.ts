@@ -1,14 +1,7 @@
 import axios from 'axios';
 import apiClient from './apiClient';
+import { LoginResponse } from '@/types';
 
-// --- 核心修复：定义后端返回的完整数据结构 ---
-export interface LoginResponse {
-  success: boolean;
-  username: string;
-  role: string;
-  token: string; // 后端 UUID 生成的 session_token，必须定义
-  message?: string;
-}
 
 export const authApi = {
   /**

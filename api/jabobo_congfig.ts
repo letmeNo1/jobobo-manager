@@ -1,32 +1,7 @@
+import { ApiResponse, UserConfig } from "@/types";
 import apiClient from "./apiClient";
 
-// --- 类型定义 ---
-export interface User {
-    id: number;
-    username: string;
-    role: string;
-    create_time: string;
-    token?: string;
-  }
-  
-  export interface UserConfig {
-    persona: string;
-    memory: string;
-    voice_status: string;
-    kb_status: string;
-  }
-  
-  export interface ApiResponse<T = any> {
-    success: boolean;
-    data?: T;
-    detail?: string;
-    message?: string;
-    token?: string; 
-    username?: string;
-    role?: string;
-    jabobo_ids?: string[];
-    files?: any[];
-  }
+
 
 export const JaboboConfig = {
     // 获取特定设备的配置

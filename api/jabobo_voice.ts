@@ -1,60 +1,7 @@
+import { ApiResponse, VoiceprintRegisterParams, VoiceprintRegisterResponse } from "@/types";
 import apiClient from "./apiClient";
 
-// --- 类型定义 ---
-// 音频文件信息接口（对应后端返回的audio_info结构）
-export interface AudioFileInfo {
-  file_path: string;
-  file_name: string;
-  file_size_bytes: number;
-  file_size_mb: number;
-  audio_format: string;
-  audio_content: string;
-  upload_time: string;
-  upload_timestamp: number;
-  current_modify_time?: string; // 查询时返回的额外字段
-  status?: string; // 查询时返回的状态字段
-}
 
-// 声纹注册请求参数类型
-export interface VoiceprintRegisterParams {
-  jaboboId: string;
-  voiceprintName: string; // 声纹名称
-  file: File; // 音频文件
-  xUsername: string; // 用户名（请求头）
-  authorization: string; // Token（请求头）
-}
-
-// 声纹注册响应数据类型
-export interface VoiceprintRegisterResponse {
-  voiceprint_id?: string; // 声纹ID（预留）
-  voiceprint_name: string; // 声纹名称
-  file_path: string; // 关联的音频文件路径
-  create_time: string; // 创建时间
-}
-
-// 通用API响应类型（沿用你的基础结构）
-export interface ApiResponse<T = any> {
-  success: boolean;
-  data?: T;
-  detail?: string;
-  message?: string;
-  token?: string;
-  username?: string;
-  role?: string;
-  jabobo_ids?: string[];
-  files?: any[];
-  // 音频接口特有返回字段
-  current_audio_info?: AudioFileInfo;
-  all_audio_paths?: AudioFileInfo[];
-  total_count?: number;
-  audio_list?: AudioFileInfo[];
-  deleted_path?: string;
-  remaining_audio_paths?: AudioFileInfo[];
-  // 声纹注册特有返回字段
-  voiceprint_info?: VoiceprintRegisterResponse;
-}
-
-// 新增：路由参数获取工具（极简版，仅适配核心需求）
 export const getRouteAuthParams = () => {
   // 从localStorage获取基础认证参数（路由传递的核心）
   return {
@@ -195,7 +142,6 @@ export const JaboboVoice = {
     }
   },
 
-  // 新增：简化版接口调用（适配路由参数，无需手动传参）
   listAudioWithRouteParams: async (): Promise<ApiResponse> => {
     const { jaboboId, xUsername, authorization } = getRouteAuthParams();
     return await JaboboVoice.listAudio(jaboboId, xUsername, authorization);
@@ -210,5 +156,4 @@ export const JaboboVoice = {
   }
 };
 
-// 别名导出，保持和现有代码一致的兼容性
 export const jaboboVoice = JaboboVoice;
