@@ -16,7 +16,7 @@ export const useAuth = (onNavigate?: (screen: Screen) => void) => {
   const login = useCallback((userData: User) => {
     localStorage.setItem('user', JSON.stringify(userData));
     setUser(userData);
-    if (onNavigate) onNavigate('DASHBOARD');
+    if (onNavigate) onNavigate('SELECT_JABOBO');
   }, [onNavigate]);
 
   const logout = useCallback(() => {

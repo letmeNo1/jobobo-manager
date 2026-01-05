@@ -208,6 +208,17 @@ const Dashboard: React.FC<DashboardProps> = ({
         <button onClick={() => onNavigate('SETTINGS')} className="flex items-center text-gray-400 text-[10px] font-black uppercase tracking-widest hover:text-gray-900 transition-colors">
           <Settings2 size={16} className="mr-2" /> Settings
         </button>
+        
+        {/* 新增：Admin 入口按钮 - 仅 Admin 角色可见 */}
+        {currentUser.role === 'Admin' && (
+          <button 
+            onClick={() => onNavigate('ADMIN')} 
+            className="flex items-center text-yellow-500 text-[10px] font-black uppercase tracking-widest hover:text-yellow-600 transition-colors"
+          >
+            <Users size={16} className="mr-2" /> Admin Panel
+          </button>
+        )}
+        
         <button onClick={handleLogout} className="flex items-center text-gray-400 text-[10px] font-black uppercase tracking-widest hover:text-red-500 transition-colors">
           <LogOut size={16} className="mr-2" /> Sign Out
         </button>
