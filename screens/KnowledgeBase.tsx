@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, UploadCloud, FileText, Trash2, ShieldAlert, Loader2, Inbox } from 'lucide-react';
 import Layout from '../components/Layout';
 import { Screen, Document } from '../types';
-import { JaboboKnownledgeBase, BackendFileInfo, ApiResponse } from '../api/jabobo_knowledge_base';
+import { JaboboKnownledgeBase, BackendFileInfo } from '../api/jabobo_knowledge_base';
 
 interface KnowledgeBaseProps {
   jaboboId: string;
@@ -80,7 +80,7 @@ const KnowledgeBase: React.FC<KnowledgeBaseProps> = ({ jaboboId, onNavigate }) =
 
     setIsUploading(true);
     try {
-      const res: ApiResponse = await JaboboKnownledgeBase.uploadKnowledgeBase(jaboboId, file);
+      const res = await JaboboKnownledgeBase.uploadKnowledgeBase(jaboboId, file);
       
       if (res.success) {
         alert("✨ 知识库同步成功！");
@@ -100,7 +100,7 @@ const KnowledgeBase: React.FC<KnowledgeBaseProps> = ({ jaboboId, onNavigate }) =
   const handleDelete = async (filePath: string, fileName: string) => {
     if (!window.confirm(`确定要删除 ${fileName} 吗？`)) return;
     try {
-      const res: ApiResponse = await JaboboKnownledgeBase.deleteKnowledgeBase(jaboboId, filePath);
+      const res = await JaboboKnownledgeBase.deleteKnowledgeBase(jaboboId, filePath);
       
       if (res.success) {
         alert("✅ 文件删除成功！");

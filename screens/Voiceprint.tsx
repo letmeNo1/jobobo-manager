@@ -1,25 +1,86 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowLeft, UserPlus, ChevronDown, Mic2 } from 'lucide-react';
 import Layout from '../components/Layout';
 import { Screen, ChatHistory } from '../types';
 import Input from '../components/Input';
+// 导入音频API（确保路径正确）
+import { jaboboVoice } from '../api/jabobo_voice';
 
 interface VoiceprintProps {
   onNavigate: (screen: Screen) => void;
+  jaboboId: string;
 }
 
-const MOCK_CHATS: ChatHistory[] = [
-  { id: '1', title: '2023-10-25: Morning Chat', duration: '0:45', date: '2023-10-25' },
-  { id: '2', title: '2023-10-24: Story Time', duration: '2:10', date: '2023-10-24' },
-  { id: '3', title: '2023-10-23: Weather Discussion', duration: '0:30', date: '2023-10-23' },
-];
-
-const Voiceprint: React.FC<VoiceprintProps> = ({ onNavigate }) => {
+const Voiceprint: React.FC<VoiceprintProps> = ({ onNavigate, jaboboId }) => {
   const [selectedChat, setSelectedChat] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+  // 保留原变量名，改为状态变量
+  const [MOCK_CHATS, setMOCK_CHATS] = useState<ChatHistory[]>([]);
+  // 新增加载状态（和知识库对齐）
+  const [isLoading, setIsLoading] = useState(true);
 
+  // 调用真实接口获取声纹列表（对齐知识库的请求逻辑）
+  useEffect(() => {
+    const fetchVoiceprintList = async () => {
+      // 1. 仅校验jaboboId（和知识库一致）
+      if (!jaboboId) {
+        console.log("[声纹请求] jaboboId为空，终止请求");
+        setIsLoading(false);
+        return;
+      }
+
+      // 2. 自动从localStorage获取认证信息（无需父组件传）
+      const xUsername = localStorage.getItem("username") || "";
+      const authorization = localStorage.getItem("auth_token") || "";
+
+      // 3. 打印日志，确认参数（排查用）
+      console.log("[声纹请求] 参数信息：", {
+        jaboboId,
+        xUsername,
+        authorization
+      });
+
+      setIsLoading(true);
+      try {
+        // 4. 调用真实接口（和知识库的API调用逻辑对齐）
+        const response = await jaboboVoice.listAudio(
+          jaboboId,
+          xUsername,
+          authorization
+        );
+
+        console.log("[声纹请求] 接口返回：", response);
+
+        // 5. 处理接口返回数据
+        if (response.success && response.audio_list && Array.isArray(response.audio_list)) {
+          // 映射为原ChatHistory格式
+          const realData: ChatHistory[] = response.audio_list.map((item: any) => ({
+            id: item.file_path,
+            title: `${item.upload_time.split(' ')[0]}: ${item.file_name}`,
+            duration: '0:00', // 保留原格式
+            date: item.upload_time.split(' ')[0] || '未知时间'
+          }));
+          setMOCK_CHATS(realData);
+        } else {
+          setMOCK_CHATS([]);
+          console.warn("[声纹请求] 无音频数据：", response.message || "空数据");
+        }
+      } catch (error) {
+        // 6. 错误处理（和知识库对齐）
+        console.error("[声纹请求] 获取列表失败：", error);
+        setMOCK_CHATS([]);
+        alert(`加载声纹列表失败: ${(error as Error).message || '网络异常'}`);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    // 执行请求
+    fetchVoiceprintList();
+  }, [jaboboId]); // 仅监听jaboboId（和知识库一致）
+
+  // 保留原有选择逻辑完全不变
   const handleChatSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = e.target.value;
     setSelectedChat(val);
@@ -33,6 +94,7 @@ const Voiceprint: React.FC<VoiceprintProps> = ({ onNavigate }) => {
     }
   };
 
+  // 完整渲染逻辑（无任何省略）
   return (
     <Layout className="bg-white">
       <div className="p-6">
@@ -56,11 +118,17 @@ const Voiceprint: React.FC<VoiceprintProps> = ({ onNavigate }) => {
               className="w-full bg-gray-50 border border-gray-100 rounded-xl py-4 px-4 appearance-none text-gray-700 focus:outline-none focus:ring-2 focus:ring-yellow-400"
               value={selectedChat}
               onChange={handleChatSelect}
+              disabled={isLoading} // 加载中禁用下拉框（和知识库对齐）
             >
               <option value="">Choose a recent chat...</option>
-              {MOCK_CHATS.map(chat => (
-                <option key={chat.id} value={chat.id}>{chat.title} ({chat.duration})</option>
-              ))}
+              {/* 加载中显示提示（和知识库对齐） */}
+              {isLoading ? (
+                <option value="" disabled>Loading audio list...</option>
+              ) : (
+                MOCK_CHATS.map(chat => (
+                  <option key={chat.id} value={chat.id}>{chat.title} ({chat.duration})</option>
+                ))
+              )}
             </select>
             <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
               <ChevronDown size={20} />
@@ -68,7 +136,7 @@ const Voiceprint: React.FC<VoiceprintProps> = ({ onNavigate }) => {
           </div>
         </div>
 
-        {/* Audio Visualizer Placeholder */}
+        {/* Audio Visualizer Placeholder - 完整保留 */}
         <div className="mb-8">
           <div className="w-full bg-gray-100 rounded-[24px] h-32 flex flex-col items-center justify-center border-2 border-dashed border-gray-200">
             {isProcessing ? (
