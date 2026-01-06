@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, UploadCloud, FileText, Trash2, ShieldAlert, Loader2, Inbox } from 'lucide-react';
+import { 
+  ArrowLeft, 
+  UploadCloud, 
+  FileText, 
+  Trash2, 
+  ShieldAlert, 
+  Loader2, 
+  Inbox 
+} from 'lucide-react';
 import Layout from '../components/Layout';
 import { Screen, Document, BackendFileInfo } from '../types';
 import { JaboboKnownledgeBase } from '../api/jabobo_knowledge_base';
@@ -10,26 +18,36 @@ interface KnowledgeBaseProps {
 }
 
 const KnowledgeBase: React.FC<KnowledgeBaseProps> = ({ jaboboId, onNavigate }) => {
+  // 状态管理
   const [docs, setDocs] = useState<Document[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
+  // 常量定义：统一管理限制规则
+  const MAX_FILE_COUNT = 10; // 最大文件数
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 单文件最大5MB
+  const MAX_TEXT_LENGTH = 100000; // 文本内容最大10万字节
+  const ALLOWED_FILE_TYPE = '.txt'; // 仅允许TXT
+
   // 辅助函数：格式化字节大小
-  const formatFileSize = (bytes: number) => {
+  const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return '0 B';
     const k = 1024;
     const sizes = ['B', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
   };
 
+  // 加载文件列表
   useEffect(() => {
     fetchFileList();
   }, [jaboboId]);
 
-  // 简化的列表获取逻辑（使用新的API封装）
-  const fetchFileList = async () => {
+  // 获取文件列表
+  const fetchFileList = async (): Promise<void> => {
     if (!jaboboId) return;
+    
     setIsLoading(true);
     try {
       const res = await JaboboKnownledgeBase.listKnowledgeBase(jaboboId);
@@ -59,22 +77,84 @@ const KnowledgeBase: React.FC<KnowledgeBaseProps> = ({ jaboboId, onNavigate }) =
     }
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // 辅助函数：读取TXT文件内容并校验长度
+  const validateTextContent = async (file: File): Promise<boolean> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      
+      // 读取文件内容
+      reader.onload = (e) => {
+        try {
+          const content = e.target?.result as string;
+          // 校验字节长度（使用TextEncoder计算UTF-8字节数，更准确）
+          const byteLength = new TextEncoder().encode(content).length;
+          
+          if (byteLength > MAX_TEXT_LENGTH) {
+            alert(`❌ 文件内容超过10万字节限制（当前：${byteLength}字节）`);
+            resolve(false);
+          } else {
+            resolve(true);
+          }
+        } catch (err) {
+          alert("❌ 读取文件内容失败，请检查文件是否损坏");
+          resolve(false);
+        }
+      };
+      
+      // 读取失败处理
+      reader.onerror = () => {
+        alert("❌ 无法读取文件内容，请选择有效的TXT文件");
+        resolve(false);
+      };
+      
+      // 以文本方式读取文件
+      reader.readAsText(file, 'utf-8');
+    });
+  };
+
+  // 处理文件上传
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
     const files = e.target.files;
     if (!files || !files[0]) return;
+    
     const file = files[0];
 
-    // 校验文件格式
-    const allowedExtensions = ['.pdf', '.txt'];
-    const fileExt = '.' + (file.name.split('.').pop() || '').toLowerCase();
-    if (!allowedExtensions.includes(fileExt)) {
-      alert("❌ 只允许上传 PDF 或 TXT 文件");
+    // 1. 检查列表是否加载完成
+    if (isLoading) {
+      alert("❌ 正在加载文件列表，请稍候再试");
       return;
     }
 
-    // 校验文件大小（30MB）
-    if (file.size > 30 * 1024 * 1024) {
-      alert("❌ 文件大小不能超过30MB");
+    // 2. 限制文件总数不超过10个
+    if (docs.length >= MAX_FILE_COUNT) {
+      alert(`❌ 知识库文件总数不能超过${MAX_FILE_COUNT}个，请先删除部分文件后再上传`);
+      return;
+    }
+
+    // 3. 校验文件格式（仅TXT）
+    const fileName = file.name.trim();
+    const extIndex = fileName.lastIndexOf('.');
+    let fileExt = '';
+    
+    if (extIndex > 0) {
+      fileExt = fileName.slice(extIndex).toLowerCase();
+    }
+    
+    if (fileExt !== ALLOWED_FILE_TYPE) {
+      alert(`❌ 只允许上传 ${ALLOWED_FILE_TYPE.toUpperCase()} 文件`);
+      return;
+    }
+
+    // 4. 校验文件大小（5MB）
+    if (file.size > MAX_FILE_SIZE) {
+      alert(`❌ 文件大小不能超过${formatFileSize(MAX_FILE_SIZE)}`);
+      return;
+    }
+
+    // 5. 新增：校验文本内容字节数（不超过10万）
+    const isContentValid = await validateTextContent(file);
+    if (!isContentValid) {
+      e.target.value = ""; // 重置文件选择框
       return;
     }
 
@@ -84,9 +164,9 @@ const KnowledgeBase: React.FC<KnowledgeBaseProps> = ({ jaboboId, onNavigate }) =
       
       if (res.success) {
         alert("✨ 知识库同步成功！");
-        await fetchFileList(); // 重新加载列表（无304缓存问题）
+        await fetchFileList(); // 重新加载列表
       } else {
-        alert("上传失败: " + (res.message || res.detail || "未知错误"));
+        alert(`上传失败: ${res.message || res.detail || "未知错误"}`);
       }
     } catch (err: any) {
       console.error("上传失败详情:", err);
@@ -97,8 +177,10 @@ const KnowledgeBase: React.FC<KnowledgeBaseProps> = ({ jaboboId, onNavigate }) =
     }
   };
 
-  const handleDelete = async (filePath: string, fileName: string) => {
+  // 处理文件删除
+  const handleDelete = async (filePath: string, fileName: string): Promise<void> => {
     if (!window.confirm(`确定要删除 ${fileName} 吗？`)) return;
+    
     try {
       const res = await JaboboKnownledgeBase.deleteKnowledgeBase(jaboboId, filePath);
       
@@ -106,7 +188,7 @@ const KnowledgeBase: React.FC<KnowledgeBaseProps> = ({ jaboboId, onNavigate }) =
         alert("✅ 文件删除成功！");
         await fetchFileList(); // 重新加载列表
       } else {
-        alert("删除失败: " + (res.message || res.detail || "未知错误"));
+        alert(`删除失败: ${res.message || res.detail || "未知错误"}`);
       }
     } catch (err) {
       console.error("删除失败:", err);
@@ -114,11 +196,11 @@ const KnowledgeBase: React.FC<KnowledgeBaseProps> = ({ jaboboId, onNavigate }) =
     }
   };
 
-  // 组件渲染部分（无变化，省略）
+  // 组件渲染
   return (
     <Layout className="bg-white">
-      {/* 原有渲染代码，完全复用 */}
       <div className="p-6">
+        {/* 返回按钮 */}
         <button 
           onClick={() => onNavigate('DASHBOARD')} 
           className="mb-6 p-2 bg-gray-50 rounded-full text-gray-600 active:scale-95 transition-transform"
@@ -126,14 +208,15 @@ const KnowledgeBase: React.FC<KnowledgeBaseProps> = ({ jaboboId, onNavigate }) =
           <ArrowLeft size={20} />
         </button>
 
+        {/* 标题 */}
         <h1 className="text-xl font-bold text-gray-800 mb-6">Knowledge Base</h1>
 
-        {/* Upload Area */}
+        {/* 上传区域 */}
         <label className={`mb-8 block cursor-pointer ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}>
           <input 
             type="file" 
             className="hidden" 
-            accept=".txt,.pdf" 
+            accept={ALLOWED_FILE_TYPE} 
             onChange={handleFileUpload} 
             disabled={isUploading} 
           />
@@ -141,22 +224,32 @@ const KnowledgeBase: React.FC<KnowledgeBaseProps> = ({ jaboboId, onNavigate }) =
             <div className="w-12 h-12 bg-white rounded-full shadow-sm flex items-center justify-center text-yellow-500 mb-4">
               {isUploading ? <Loader2 size={24} className="animate-spin" /> : <UploadCloud size={24} />}
             </div>
-            <h3 className="font-bold text-gray-800 mb-1">{isUploading ? 'Uploading...' : 'Upload Knowledge File'}</h3>
-            <p className="text-xs text-gray-400">PDF or TXT, up to 30MB</p>
+            <h3 className="font-bold text-gray-800 mb-1">
+              {isUploading ? 'Uploading...' : 'Upload Knowledge File'}
+            </h3>
+            {/* 新增：提示文本内容限制 */}
+            <p className="text-xs text-gray-400">
+              TXT only, up to 5MB (Max 10 files total, content ≤ 100,000 bytes)
+            </p>
           </div>
         </label>
 
-        {/* List Section */}
+        {/* 文件列表标题 */}
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-bold text-gray-800">Device Documents</h2>
-          <span className="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded-full">{docs.length} files</span>
+          <span className="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded-full">
+            {docs.length}/{MAX_FILE_COUNT} files
+          </span>
         </div>
 
+        {/* 文件列表 */}
         <div className="space-y-3">
           {isLoading ? (
-            <div className="py-12 flex justify-center"><Loader2 className="animate-spin text-gray-300" size={32} /></div>
+            <div className="py-12 flex justify-center">
+              <Loader2 className="animate-spin text-gray-300" size={32} />
+            </div>
           ) : docs.length > 0 ? (
-            docs.map(doc => (
+            docs.map((doc) => (
               <div 
                 key={doc.id} 
                 className="flex items-center p-4 bg-gray-50 rounded-2xl border border-gray-100 group animate-in fade-in slide-in-from-bottom-2"
@@ -166,7 +259,9 @@ const KnowledgeBase: React.FC<KnowledgeBaseProps> = ({ jaboboId, onNavigate }) =
                 </div>
                 <div className="flex-1 min-w-0">
                   <h4 className="text-sm font-bold text-gray-800 truncate">{doc.name}</h4>
-                  <p className="text-[10px] text-gray-400 uppercase tracking-wide">{doc.size} • {doc.date}</p>
+                  <p className="text-[10px] text-gray-400 uppercase tracking-wide">
+                    {doc.size} • {doc.date}
+                  </p>
                 </div>
                 <button 
                   onClick={() => handleDelete(doc.filePath, doc.name)} 
@@ -184,7 +279,7 @@ const KnowledgeBase: React.FC<KnowledgeBaseProps> = ({ jaboboId, onNavigate }) =
           )}
         </div>
 
-        {/* DB Info */}
+        {/* 存储信息提示 */}
         <div className="mt-8 p-4 bg-blue-50 rounded-2xl flex items-start space-x-3">
           <ShieldAlert size={18} className="text-blue-500 mt-0.5" />
           <div className="flex-1">
