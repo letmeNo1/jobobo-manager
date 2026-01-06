@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, UserPlus, ChevronDown, Mic2 } from 'lucide-react';
+import { ArrowLeft, UserPlus, ChevronDown, Mic2, Trash2 } from 'lucide-react';
 import Layout from '../components/Layout';
 import { Screen, ChatHistory } from '../types';
 import Input from '../components/Input';
@@ -44,6 +44,8 @@ const Voiceprint: React.FC<VoiceprintProps> = ({ onNavigate, jaboboId }) => {
   const [audioList, setAudioList] = useState<AudioFile[]>([]);
   // 新增状态存储选中音频的content
   const [selectedAudioContent, setSelectedAudioContent] = useState<string>('');
+  // 新增删除加载状态
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     const fetchVoiceprintList = async () => {
@@ -82,7 +84,7 @@ const Voiceprint: React.FC<VoiceprintProps> = ({ onNavigate, jaboboId }) => {
         } else {
           setMOCK_CHATS([]);
           setAudioList([]);
-          console.warn("[声纹请求] 无音频数据：", response.message || "空数据");
+          console.warn("[声纹请求] 无音频数据：", response.message || response.detail || "空数据");
         }
       } catch (error) {
         console.error("[声纹请求] 获取列表失败：", error);
@@ -96,6 +98,82 @@ const Voiceprint: React.FC<VoiceprintProps> = ({ onNavigate, jaboboId }) => {
 
     fetchVoiceprintList();
   }, [jaboboId]);
+
+  // 新增：删除当前选中音频的函数（适配 ApiResponse 类型）
+  const handleDeleteSelectedAudio = async () => {
+    // 二次确认
+    if (!window.confirm('确定要删除这个音频文件吗？删除后无法恢复！')) {
+      return;
+    }
+
+    // 校验必要参数
+    if (!jaboboId || !selectedChat) {
+      alert('删除失败：缺少必要的参数');
+      return;
+    }
+
+    // 获取认证信息
+    const xUsername = localStorage.getItem("username") || "";
+    const authorization = localStorage.getItem("auth_token") || "";
+
+    try {
+      setIsDeleting(true);
+      console.log(`[删除音频] 开始删除文件: ${selectedChat}`);
+      
+      // 调用删除接口
+      const response = await jaboboVoice.deleteAudio(
+        jaboboId,
+        selectedChat, // selectedChat 是选中音频的 file_path
+        xUsername,
+        authorization
+      );
+      
+      console.log('[删除音频] 接口返回：', response);
+      
+      // 仅使用类型中存在的 success 字段判断
+      if (response.success) {
+        alert('音频文件删除成功！');
+        
+        // 清空选中状态
+        setSelectedChat('');
+        setSelectedAudioContent('');
+        setIsLoaded(false);
+        
+        // 重新加载音频列表（刷新数据）
+        const xUsernameReload = localStorage.getItem("username") || "";
+        const authorizationReload = localStorage.getItem("auth_token") || "";
+        const reloadResponse = await jaboboVoice.listAudio(jaboboId, xUsernameReload, authorizationReload);
+        
+        if (reloadResponse.success) {
+          if (reloadResponse.audio_list && Array.isArray(reloadResponse.audio_list)) {
+            setAudioList(reloadResponse.audio_list);
+            const newChats = reloadResponse.audio_list.map((item: AudioFile) => ({
+              id: item.file_path,
+              title: `${item.upload_time.split(' ')[0]}: ${item.file_name}`,
+              duration: '0:00',
+              date: item.upload_time.split(' ')[0] || '未知时间'
+            }));
+            setMOCK_CHATS(newChats);
+          } else {
+            setMOCK_CHATS([]);
+            setAudioList([]);
+          }
+        } else {
+          setMOCK_CHATS([]);
+          setAudioList([]);
+          console.warn('[刷新音频列表] 接口返回失败：', reloadResponse.message || reloadResponse.detail);
+        }
+      } else {
+        // 优先用 message，其次用 detail 展示错误信息
+        alert(`删除失败：${response.message || response.detail || '未知错误'}`);
+      }
+    } catch (error) {
+      console.error('[删除音频] 失败：', error);
+      alert(`删除音频失败: ${(error as Error).message || '网络异常'}`);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const handleChatSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = e.target.value;
@@ -189,7 +267,22 @@ const Voiceprint: React.FC<VoiceprintProps> = ({ onNavigate, jaboboId }) => {
                 
                 {/* 新增Audio Content展示区域 */}
                 <div className="w-full bg-white rounded-xl p-3 border border-gray-200 mt-2">
-                  <h4 className="text-xs font-bold text-gray-700 mb-1">Audio Content</h4>
+                  <div className="flex justify-between items-start mb-1">
+                    <h4 className="text-xs font-bold text-gray-700">Audio Content</h4>
+                    {/* 新增：选中后显示删除按钮 */}
+                    <button
+                      onClick={handleDeleteSelectedAudio}
+                      disabled={isDeleting}
+                      className="p-1 text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                      aria-label="删除当前音频"
+                    >
+                      {isDeleting ? (
+                        <div className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+                      ) : (
+                        <Trash2 size={14} />
+                      )}
+                    </button>
+                  </div>
                   <p className="text-sm text-gray-600 whitespace-pre-wrap break-words">
                     {selectedAudioContent || '无音频文本内容'}
                   </p>
