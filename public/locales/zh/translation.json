@@ -1,0 +1,104 @@
+{
+  "landing": {
+    "brand": "捷宝宝 Jabobo",
+    "nav": {
+      "product": "产品",
+      "safety": "安全",
+      "story": "故事",
+      "support": "支持"
+    },
+    "hero": {
+      "title1": "用 AI 温暖陪伴",
+      "title2": "每一个童年",
+      "titleHighlight": "每一个童年",
+      "desc": "捷宝宝是专为3-12岁儿童设计的智能陪伴机器人，融合情感计算、语音交互与教育内容，在保护隐私的前提下，给孩子一个安全、有趣、有成长的AI伙伴。",
+      "cert1": "通过国家儿童产品安全认证",
+      "cert2": "端到端加密，数据不出设备"
+    },
+    "features": {
+      "title": "为什么家长选择捷宝宝？",
+      "desc": "我们专注于儿童发展心理学与AI技术的结合，打造真正懂孩子的智能伙伴。",
+      "item1": {
+        "title": "情感陪伴",
+        "desc": "能识别孩子情绪，主动安慰、鼓励，建立安全依恋关系。"
+      },
+      "item2": {
+        "title": "成长内容",
+        "desc": "内置分级故事、儿歌、科普知识，内容由教育专家审核。"
+      },
+      "item3": {
+        "title": "隐私优先",
+        "desc": "所有语音数据本地处理，不上传云端，家长完全掌控。"
+      }
+    },
+    "trust": {
+      "title": "已陪伴超过 50,000 个家庭",
+      "desc": "“捷宝宝不仅是玩具，更是孩子的朋友。他学会了分享，也更愿意表达情绪。”—— 北京 李妈妈，8岁男孩家长"
+    },
+    "footer": {
+      "copyright": "© 2026 捷宝宝科技（北京）有限公司. 保留所有权利。",
+      "privacyNote": "本产品仅面向家庭场景，不收集儿童生物特征用于商业用途。"
+    }
+  },
+    "login": {
+    "title": "捷宝宝",
+    "subtitle": "管理系统",
+    "usernameLabel": "账号",
+    "usernamePlaceholder": "输入账号",
+    "passwordLabel": "密码",
+    "passwordPlaceholder": "输入密码",
+    "loginButton": "登录",
+    "loginLoading": "正在验证...",
+    "createAccount": "创建账号",
+    "secureAccess": "安全管理员访问",
+    "loginError": "登录失败，请检查网络或账号密码"
+  },
+  "jaboboSelector": {
+    "title": "Select Your Jabobo",
+    "subtitle": "选择要管理的实体设备",
+    "deviceCardTitle": "Jabobo Unit",
+    "bindNewBtn": "Bind New Entity",
+    "bindTitle": "Link Device",
+    "inputPlaceholder": "Enter UUID (e.g. 00:11:22:33:44:55 or 123456)",
+    "confirmBindBtn": "Confirm",
+    "deleteConfirm": "确认删除该设备？",
+    "deleteSuccess": "设备删除成功",
+    "deleteFail": "设备删除失败",
+    "bindFail": "绑定失败",
+    "validate": {
+      "empty": "设备ID不能为空",
+      "formatError": "设备ID格式错误（应为xx:xx:xx:xx:xx:xx或6位纯数字）"
+    }
+  },
+    "dashboard": {
+    "switchDevice": "切换设备",
+    "activeDevice": "当前设备",
+    "adminRole": "管理员",
+    "userRole": "普通用户",
+    "personaCustom": "人设定制",
+    "addPersona": "添加人设",
+    "deletePersonaConfirm": "删除此人设？",
+    "personaNamePlaceholder": "输入名称",
+    "deviceMemory": "设备记忆",
+    "voiceprintSetting": "声纹设置",
+    "knowledgeBase": "知识库",
+    "syncing": "同步中...",
+    "syncConfig": "同步配置到设备",
+    "syncSuccessTip": "✨ 设备 {{last4}} 配置已更新！",
+    "syncFailTip": "同步失败",
+    "settings": "设置",
+    "adminPanel": "管理员面板",
+    "signOut": "退出登录",
+    "voiceStatusLoading": "加载中...",
+    "kbStatusLoading": "加载中...",
+    "voiceStatusReady": "已就绪",
+    "kbStatusSynced": "已同步",
+    "defaultPersonaName": "我的AI",
+    "personaContentPlaceholder": "输入人设描述内容...",
+    "deviceMemoryPlaceholder": "输入设备记忆内容..."
+  },
+  "language": {
+    "zh": "中文",
+    "en": "English"
+  }
+}

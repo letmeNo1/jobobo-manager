@@ -3,6 +3,8 @@ import { Plus, Cpu, LogOut, Link as LinkIcon, X, Loader2, Trash2 } from 'lucide-
 import Layout from '../components/Layout';
 import { Screen } from '../types';
 import { jaboboManager } from '../api/jabobo_manager';
+import { useTranslation } from 'react-i18next';
+import '../i18n';
 
 interface JaboboSelectorProps {
   onSelect: (uuid: string) => void;
@@ -10,89 +12,91 @@ interface JaboboSelectorProps {
 }
 
 const JaboboSelector: React.FC<JaboboSelectorProps> = ({ onSelect, onNavigate }) => {
-  // 1. 状态管理：从 null 开始，加载后更新
+  // 状态管理
   const [uuids, setUuids] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isBinding, setIsBinding] = useState(false);
   const [inputUuid, setInputUuid] = useState('');
-  // 新增：校验错误提示状态
   const [validateError, setValidateError] = useState('');
-  // 新增状态：删除确认、删除加载中
   const [deleteConfirmUuid, setDeleteConfirmUuid] = useState<string | null>(null);
   const [deletingUuid, setDeletingUuid] = useState<string | null>(null);
 
-  // 2. 获取数据：组件加载时向后端请求“我有几个捷宝宝”
-  useEffect(() => {
-    fetchJaboboList();
-  }, []);
+  // 多语言：使用 ready 状态判断翻译是否加载完成（替代 isLoaded）
+  const { t, ready, i18n } = useTranslation();
 
+  // 调试日志（开发阶段用，可删除）
+  useEffect(() => {
+    console.log("=== i18n 调试信息 ===");
+    console.log("翻译是否就绪：", ready);
+    console.log("当前语言：", i18n.language);
+    console.log("title 翻译结果：", ready ? t("jaboboSelector.title") : "加载中...");
+  }, [ready, t, i18n]);
+
+  // 翻译就绪后加载设备列表
+  useEffect(() => {
+    if (ready) {
+      fetchJaboboList();
+    }
+  }, [ready]);
+
+  // 获取设备列表
   const fetchJaboboList = async () => {
     setIsLoading(true);
     try {
-      const res = await jaboboManager.getJaboboIds(); // 调用 API 获取 ID 列表
+      const res = await jaboboManager.getJaboboIds();
       if (res.success && Array.isArray(res.jabobo_ids)) {
         setUuids(res.jabobo_ids);
       }
     } catch (err) {
-      console.error("获取设备列表失败:", err);
+      console.error(ready ? t("common.networkError") : "网络错误，请重试", err);
+      alert(ready ? t("common.networkError") : "网络错误，请重试");
     } finally {
       setIsLoading(false);
     }
   };
 
-  // 新增：设备ID格式校验函数
+  // 设备ID校验
   const validateJaboboId = (id: string): { valid: boolean; message: string } => {
-    // 去除首尾空格并转大写（保持格式统一）
     const trimmedId = id.trim().toUpperCase();
-    
-    // 空值校验
     if (!trimmedId) {
-      return { valid: false, message: "设备ID不能为空" };
+      return { valid: false, message: t("jaboboSelector.validate.empty") };
     }
-
-    // 两种合法格式：MAC格式(xx:xx:xx:xx:xx:xx) 或 6位纯数字
     const isMacFormat = trimmedId.length === 17 && trimmedId.split(':').length === 6;
     const is6DigitFormat = trimmedId.length === 6 && /^\d+$/.test(trimmedId);
-
     if (!isMacFormat && !is6DigitFormat) {
       return { 
         valid: false, 
-        message: "设备ID格式错误（应为xx:xx:xx:xx:xx:xx或6位纯数字）" 
+        message: t("jaboboSelector.validate.formatError") 
       };
     }
-
-    // 校验通过
     return { valid: true, message: "" };
   };
 
-  // 3. 绑定逻辑：增加格式校验 + 调用 API 绑定后重新刷新列表
+  // 绑定设备
   const handleBind = async () => {
-    // 先执行格式校验
     const { valid, message } = validateJaboboId(inputUuid);
     if (!valid) {
       setValidateError(message);
       return;
     }
-    // 校验通过，清空错误提示
     setValidateError('');
 
     const val = inputUuid.trim().toUpperCase();
-    
     try {
-      const res = await jaboboManager.bindJabobo(val); // 调用后端绑定接口
+      const res = await jaboboManager.bindJabobo(val);
       if (res.success) {
-        await fetchJaboboList(); // 成功后重新拉取列表
+        await fetchJaboboList();
         setIsBinding(false);
         setInputUuid('');
       } else {
-        alert(res.message || "绑定失败");
+        alert(res.message || t("jaboboSelector.bindFail"));
       }
     } catch (err) {
-      alert("网络错误，请重试");
+      alert(t("common.networkError"));
     }
   };
 
-  // 新增：输入框变化时实时清除错误提示
+  // 输入框变化处理
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputUuid(e.target.value);
     if (validateError) {
@@ -100,65 +104,74 @@ const JaboboSelector: React.FC<JaboboSelectorProps> = ({ onSelect, onNavigate })
     }
   };
 
-  // 新增：删除设备逻辑
+  // 删除设备
   const handleDelete = async (uuid: string) => {
-    // 防止重复点击
     if (deletingUuid === uuid) return;
-    
     setDeletingUuid(uuid);
     try {
-      // 调用后端删除接口（需确保 jaboboManager 有该方法）
       const res = await jaboboManager.unbindJabobo(uuid);
       if (res.success) {
-        // 前端移除该设备
         setUuids(prev => prev.filter(item => item !== uuid));
-        alert("设备删除成功");
+        alert(t("jaboboSelector.deleteSuccess"));
       } else {
-        alert(res.message || "设备删除失败");
+        alert(res.message || t("jaboboSelector.deleteFail"));
       }
     } catch (err) {
-      console.error("删除设备失败:", err);
-      alert("网络错误，删除失败");
+      console.error(t("common.networkError"), err);
+      alert(t("common.networkError"));
     } finally {
       setDeletingUuid(null);
-      setDeleteConfirmUuid(null); // 关闭确认弹窗
+      setDeleteConfirmUuid(null);
     }
   };
 
+  // 翻译未就绪时显示加载中
+  if (!ready) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-white">
+        <Loader2 className="animate-spin text-yellow-400" size={48} />
+      </div>
+    );
+  }
+
   return (
     <Layout className="bg-white h-full flex flex-col p-8 md:p-12">
-      {/* 顶部标题栏 - 保持你的原始设计 */}
+      {/* 顶部标题栏 */}
       <div className="flex justify-between items-center mb-12">
         <div>
-          <h1 className="text-4xl font-black text-gray-900 italic tracking-tighter uppercase">Select Your Jabobo</h1>
-          <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mt-2">选择要管理的实体设备</p>
+          <h1 className="text-4xl font-black text-gray-900 italic tracking-tighter uppercase">
+            {t("jaboboSelector.title")}
+          </h1>
+          <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mt-2">
+            {t("jaboboSelector.subtitle")}
+          </p>
         </div>
         <button 
           onClick={() => { localStorage.clear(); onNavigate('LOGIN'); }} 
           className="p-4 text-gray-300 hover:text-red-500 transition-colors"
+          aria-label={t("common.logout")}
         >
           <LogOut size={28}/>
         </button>
       </div>
 
-      {/* 设备列表网格 - 适配你的 6xl 容器 */}
+      {/* 设备列表 */}
       <div className="flex-1 overflow-y-auto pr-2">
         {isLoading ? (
           <div className="flex items-center justify-center h-64">
             <Loader2 className="animate-spin text-yellow-400" size={48} />
+            <span className="ml-4 text-gray-500 font-bold">{t("common.loading")}</span>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {/* 动态渲染：有几个 ID 就渲染几个卡片 */}
+            {/* 已绑定设备 */}
             {uuids.map(uuid => (
               <div 
                 key={uuid} 
                 className="group bg-gray-50 border-2 border-transparent hover:border-yellow-400 p-10 rounded-[40px] transition-all cursor-pointer shadow-sm hover:shadow-xl relative"
               >
-                {/* 设备卡片点击选择逻辑（排除删除按钮区域） */}
                 <div 
                   onClick={(e) => {
-                    // 阻止删除按钮的点击冒泡到卡片选择
                     if (!e.target.closest('.delete-btn')) {
                       onSelect(uuid);
                     }
@@ -168,31 +181,36 @@ const JaboboSelector: React.FC<JaboboSelectorProps> = ({ onSelect, onNavigate })
                   <div className="w-20 h-20 bg-gray-900 rounded-[24px] flex items-center justify-center text-yellow-400 mb-8 group-hover:scale-110 transition-transform shadow-lg">
                     <Cpu size={40} />
                   </div>
-                  <div className="font-black text-2xl text-gray-900 italic tracking-tight mb-2 uppercase">Jabobo Unit</div>
+                  <div className="font-black text-2xl text-gray-900 italic tracking-tight mb-2 uppercase">
+                    {t("jaboboSelector.deviceCardTitle")}
+                  </div>
                   <div className="font-mono text-sm text-gray-400 font-bold tracking-widest">{uuid}</div>
                 </div>
 
-                {/* 新增：删除按钮 - 悬浮显示 */}
+                {/* 删除按钮 */}
                 <button 
                   className="delete-btn absolute top-6 right-6 p-2 text-gray-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 z-10"
                   onClick={(e) => {
-                    e.stopPropagation(); // 阻止冒泡到卡片选择
+                    e.stopPropagation();
                     setDeleteConfirmUuid(uuid);
                   }}
+                  aria-label={t("common.delete")}
                 >
                   <Trash2 size={20} />
                 </button>
 
-                {/* 新增：删除确认弹窗 - 条件渲染 */}
+                {/* 删除确认弹窗 */}
                 {deleteConfirmUuid === uuid && (
                   <div className="absolute inset-0 bg-black/70 rounded-[40px] flex flex-col items-center justify-center z-20 animate-in fade-in-50">
-                    <p className="text-white font-bold text-sm mb-4 text-center">确认删除该设备？</p>
+                    <p className="text-white font-bold text-sm mb-4 text-center">
+                      {t("jaboboSelector.deleteConfirm")}
+                    </p>
                     <div className="flex gap-4">
                       <button 
                         onClick={() => setDeleteConfirmUuid(null)}
                         className="bg-gray-200 text-gray-800 px-6 py-2 rounded-xl font-black text-xs uppercase"
                       >
-                        取消
+                        {t("common.cancel")}
                       </button>
                       <button 
                         onClick={() => handleDelete(uuid)}
@@ -202,7 +220,7 @@ const JaboboSelector: React.FC<JaboboSelectorProps> = ({ onSelect, onNavigate })
                         {deletingUuid === uuid ? (
                           <Loader2 size={16} className="animate-spin mx-auto" />
                         ) : (
-                          "删除"
+                          t("common.delete")
                         )}
                       </button>
                     </div>
@@ -218,26 +236,32 @@ const JaboboSelector: React.FC<JaboboSelectorProps> = ({ onSelect, onNavigate })
                 className="border-2 border-dashed border-gray-100 p-10 rounded-[40px] flex flex-col items-center justify-center text-gray-300 hover:border-yellow-400 hover:text-yellow-400 transition-all min-h-[260px]"
               >
                 <Plus size={48} />
-                <span className="font-black text-xs uppercase tracking-widest mt-4">Bind New Entity</span>
+                <span className="font-black text-xs uppercase tracking-widest mt-4">
+                  {t("jaboboSelector.bindNewBtn")}
+                </span>
               </button>
             ) : (
               <div className="lg:col-span-1 bg-yellow-50 border-2 border-yellow-400 p-10 rounded-[40px] flex flex-col justify-center animate-in zoom-in-95">
                  <div className="flex justify-between items-center mb-8">
                    <span className="font-black text-sm text-yellow-700 uppercase tracking-widest flex items-center">
-                     <LinkIcon size={18} className="mr-3"/> Link Device
+                     <LinkIcon size={18} className="mr-3"/> {t("jaboboSelector.bindTitle")}
                    </span>
-                   <button onClick={() => setIsBinding(false)}><X size={20}/></button>
+                   <button 
+                     onClick={() => setIsBinding(false)}
+                     aria-label={t("common.cancel")}
+                   >
+                     <X size={20}/>
+                   </button>
                  </div>
                  <input 
                    autoFocus 
                    value={inputUuid} 
-                   onChange={handleInputChange} // 改用带错误清除的输入处理函数
+                   onChange={handleInputChange}
                    className={`w-full bg-white rounded-2xl px-6 py-4 font-bold text-gray-900 shadow-inner outline-none mb-2 ${
                      validateError ? 'border-2 border-red-500' : ''
                    }`}
-                   placeholder="Enter UUID (e.g. 00:11:22:33:44:55 or 123456)"
+                   placeholder={t("jaboboSelector.inputPlaceholder")}
                  />
-                 {/* 新增：校验错误提示 */}
                  {validateError && (
                    <p className="text-red-500 text-xs font-bold mb-4">{validateError}</p>
                  )}
@@ -245,7 +269,7 @@ const JaboboSelector: React.FC<JaboboSelectorProps> = ({ onSelect, onNavigate })
                    onClick={handleBind} 
                    className="bg-gray-900 text-yellow-400 py-4 rounded-2xl font-black text-xs uppercase active:scale-95 transition-all"
                  >
-                   Confirm
+                   {t("jaboboSelector.confirmBindBtn")}
                  </button>
               </div>
             )}

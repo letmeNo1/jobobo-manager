@@ -1,14 +1,20 @@
 import React, { useState } from 'react';
-import { ShieldCheck } from 'lucide-react'; // 移除了 LogIn 图标引用
+import { ShieldCheck } from 'lucide-react';
 import Input from '../components/Input';
 import { Screen } from '../types';
 import { authApi } from '../api/auth';
 import { useAuth } from '../hooks/useAuth';
-import logoImg from '../assets/login.png'; 
+import logoImg from '../assets/login.png';
+// 1. 导入多语言相关依赖 + 封装好的语言切换组件
+import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from '../components/LanguageSwitcher'; // 新增：导入通用组件
+import '../i18n'; // 确保导入i18n配置
 
 interface LoginProps {
   onNavigate: (screen: Screen) => void;
 }
+
+
 
 const Login: React.FC<LoginProps> = ({ onNavigate }) => {
   const [username, setUsername] = useState('');
@@ -17,6 +23,10 @@ const Login: React.FC<LoginProps> = ({ onNavigate }) => {
   const [error, setError] = useState('');
   
   const { login } = useAuth(onNavigate);
+  // 2. 仅保留翻译函数（移除i18n实例，因为切换逻辑移到组件内）
+  const { t } = useTranslation();
+
+  // 移除：手动的changeLanguage函数（组件内已封装）
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,41 +43,48 @@ const Login: React.FC<LoginProps> = ({ onNavigate }) => {
         });
       }
     } catch (err: any) {
-      setError(err.message || '登录失败，请检查网络或账号密码');
+      // 使用翻译文本作为默认错误提示
+      setError(err.message || t('login.loginError'));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-gray-50">
+    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-gray-50 relative">
+      {/* 5. 替换：手动按钮 → 通用LanguageSwitcher组件（自动显示，无需传参） */}
+      <div className="absolute top-6 right-6">
+        <LanguageSwitcher 
+          onLanguageChange={() => setError('')} // 切换语言时清空错误提示
+        />
+      </div>
+
       <div className="w-full max-w-md bg-white rounded-[40px] p-10 shadow-xl border border-gray-100">
-        
-        {/* --- 核心修改：将图标容器改为图像容器 --- */}
         <div className="flex flex-col items-center mb-10">
           <div className="w-20 h-20 bg-yellow-400 rounded-3xl flex items-center justify-center mb-4 shadow-lg shadow-yellow-200 overflow-hidden p-2">
             <img 
               src={logoImg} 
-              alt="Jabobo Logo" 
+              alt={`${t('login.title')} Logo`} 
               className="w-full h-full object-contain" 
             />
           </div>
-          <h2 className="text-3xl font-black text-gray-800 tracking-tight">Jabobo</h2>
-          <p className="text-gray-400 font-bold text-xs uppercase tracking-widest mt-2">Management System</p>
+          {/* 替换硬编码文本为翻译函数（保留） */}
+          <h2 className="text-3xl font-black text-gray-800 tracking-tight">{t('login.title')}</h2>
+          <p className="text-gray-400 font-bold text-xs uppercase tracking-widest mt-2">{t('login.subtitle')}</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6">
           <Input 
-            label="Username" 
-            placeholder="输入账号" 
+            label={t('login.usernameLabel')} 
+            placeholder={t('login.usernamePlaceholder')} 
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             required
           />
           <Input 
-            label="Password" 
+            label={t('login.passwordLabel')} 
             type="password" 
-            placeholder="输入密码" 
+            placeholder={t('login.passwordPlaceholder')} 
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -84,7 +101,8 @@ const Login: React.FC<LoginProps> = ({ onNavigate }) => {
             disabled={loading}
             className={`w-full bg-yellow-400 hover:bg-yellow-500 text-gray-900 py-5 rounded-3xl font-black text-lg shadow-xl active:scale-[0.98] transition-all ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
           >
-            {loading ? '正在验证...' : 'SIGN IN'}
+            {/* 动态显示登录按钮文本（保留） */}
+            {loading ? t('login.loginLoading') : t('login.loginButton')}
           </button>
         </form>
 
@@ -93,16 +111,17 @@ const Login: React.FC<LoginProps> = ({ onNavigate }) => {
             onClick={() => onNavigate('SIGNUP')}
             className="text-gray-400 text-xs font-bold uppercase tracking-widest hover:text-gray-600 transition-colors"
           >
-            Create Account
+            {t('login.createAccount')}
           </button>
         </div>
       </div>
       
       <div className="mt-8 flex items-center text-gray-300">
         <ShieldCheck size={16} className="mr-2" />
-        <span className="text-[10px] font-bold uppercase tracking-widest">Secure Admin Access</span>
+        <span className="text-[10px] font-bold uppercase tracking-widest">{t('login.secureAccess')}</span>
       </div>
     </div>
+    
   );
 };
 

@@ -1,0 +1,104 @@
+{
+  "landing": {
+    "brand": "Jabobo",
+    "nav": {
+      "product": "Product",
+      "safety": "Safety",
+      "story": "Story",
+      "support": "Support"
+    },
+    "hero": {
+      "title1": "Warm Companionship with AI",
+      "title2": "Every Childhood",
+      "titleHighlight": "Every Childhood",
+      "desc": "Jabobo is an intelligent companion robot designed specifically for children aged 3-12. Integrating emotional computing, voice interaction and educational content, it provides children with a safe, fun and growth-oriented AI partner while protecting privacy.",
+      "cert1": "Certified by National Children's Product Safety",
+      "cert2": "End-to-end encryption, data never leaves the device"
+    },
+    "features": {
+      "title": "Why do parents choose Jabobo?",
+      "desc": "We focus on combining child developmental psychology with AI technology to create an intelligent partner that truly understands children.",
+      "item1": {
+        "title": "Emotional Companionship",
+        "desc": "Recognizes children's emotions, actively comforts and encourages them, and builds a secure attachment relationship."
+      },
+      "item2": {
+        "title": "Growth Content",
+        "desc": "Built-in graded stories, nursery rhymes, and popular science knowledge, all content reviewed by education experts."
+      },
+      "item3": {
+        "title": "Privacy First",
+        "desc": "All voice data is processed locally, not uploaded to the cloud, fully controlled by parents."
+      }
+    },
+    "trust": {
+      "title": "Accompanying over 50,000 families",
+      "desc": "\"Jabobo is not just a toy, but a friend to children. He has learned to share and is more willing to express his emotions.\" - Ms. Li, Beijing, mother of an 8-year-old boy"
+    },
+    "footer": {
+      "copyright": "© 2026 Jabobo Technology (Beijing) Co., Ltd. All rights reserved.",
+      "privacyNote": "This product is only for family use and does not collect children's biometric features for commercial purposes."
+    }
+  },
+  "login": {
+    "title": "Jabobo",
+    "subtitle": "Management System",
+    "usernameLabel": "Username",
+    "usernamePlaceholder": "Enter username",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Enter password",
+    "loginButton": "SIGN IN",
+    "loginLoading": "Verifying...",
+    "createAccount": "Create Account",
+    "secureAccess": "Secure Admin Access",
+    "loginError": "Login failed, please check network or account password"
+  },
+  "jaboboSelector": {
+    "title": "Select Your Jabobo",
+    "subtitle": "Select physical device to manage",
+    "deviceCardTitle": "Jabobo Unit",
+    "bindNewBtn": "Bind New Entity",
+    "bindTitle": "Link Device",
+    "inputPlaceholder": "Enter UUID (e.g. 00:11:22:33:44:55 or 123456)",
+    "confirmBindBtn": "Confirm",
+    "deleteConfirm": "Confirm to delete this device?",
+    "deleteSuccess": "Device deleted successfully",
+    "deleteFail": "Failed to delete device",
+    "bindFail": "Binding failed",
+    "validate": {
+      "empty": "Device ID cannot be empty",
+      "formatError": "Device ID format error (should be xx:xx:xx:xx:xx:xx or 6-digit number)"
+    }
+  },
+   "dashboard": {
+    "switchDevice": "Switch Device",
+    "activeDevice": "Active Device",
+    "adminRole": "Admin",
+    "userRole": "User",
+    "personaCustom": "Persona Customization",
+    "addPersona": "Add Persona",
+    "deletePersonaConfirm": "Delete this persona?",
+    "personaNamePlaceholder": "Enter name",
+    "deviceMemory": "Device Memory",
+    "voiceprintSetting": "Voiceprint",
+    "knowledgeBase": "Knowledge Base",
+    "syncing": "Syncing...",
+    "syncConfig": "Sync Config to Device",
+    "syncSuccessTip": "✨ Device {{last4}} config updated!",
+    "syncFailTip": "Sync failed",
+    "settings": "Settings",
+    "adminPanel": "Admin Panel",
+    "signOut": "Sign Out",
+    "voiceStatusLoading": "Loading...",
+    "kbStatusLoading": "Loading...",
+    "voiceStatusReady": "Ready",
+    "kbStatusSynced": "Synced",
+    "defaultPersonaName": "My AI",
+    "personaContentPlaceholder": "Enter persona description...",
+    "deviceMemoryPlaceholder": "Enter device memory content..."
+  },
+  "language": {
+    "zh": "Chinese",
+    "en": "English"
+  }
+}

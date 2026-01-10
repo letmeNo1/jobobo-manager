@@ -1,8 +1,19 @@
 // src/screens/LandingPage.tsx
 import React from 'react';
+import { useTranslation } from 'react-i18next'; // 引入翻译钩子
 import productImg from '../assets/login.png'; 
 
+// 导入i18n配置（确保在应用入口也导入一次）
+import '../i18n';
+
 const LandingPage: React.FC = () => {
+  const { t, i18n } = useTranslation(); // 获取翻译函数和i18n实例
+
+  // 切换语言的函数
+  const changeLanguage = (lng: string) => {
+    i18n.changeLanguage(lng);
+  };
+
   return (
     <div className="font-sans">
       {/* Hero Section */}
@@ -11,44 +22,60 @@ const LandingPage: React.FC = () => {
           <div className="flex items-center space-x-2">
             <img 
               src={productImg} 
-              alt="捷宝宝 Logo" 
+              alt={`${t('landing.brand')} Logo`} 
               className="w-10 h-10 rounded-full object-cover"
             />
-            <h1 className="text-2xl font-bold text-gray-900">捷宝宝 Jabobo</h1>
+            <h1 className="text-2xl font-bold text-gray-900">{t('landing.brand')}</h1>
           </div>
-          <nav className="hidden md:block">
-            <ul className="flex space-x-8 text-gray-600">
-              <li>产品</li>
-              <li>安全</li>
-              <li>故事</li>
-              <li>支持</li>
-            </ul>
-          </nav>
+          <div className="flex items-center space-x-8">
+            <nav className="hidden md:block">
+              <ul className="flex space-x-8 text-gray-600">
+                <li>{t('landing.nav.product')}</li>
+                <li>{t('landing.nav.safety')}</li>
+                <li>{t('landing.nav.story')}</li>
+                <li>{t('landing.nav.support')}</li>
+              </ul>
+            </nav>
+            {/* 语言切换按钮 */}
+            <div className="flex space-x-2">
+              <button 
+                onClick={() => changeLanguage('zh')}
+                className={`px-3 py-1 rounded ${i18n.language === 'zh' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-800'}`}
+              >
+                {t('language.zh')}
+              </button>
+              <button 
+                onClick={() => changeLanguage('en')}
+                className={`px-3 py-1 rounded ${i18n.language === 'en' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-800'}`}
+              >
+                {t('language.en')}
+              </button>
+            </div>
+          </div>
         </header>
 
         <div className="container mx-auto px-4 flex-grow flex flex-col md:flex-row items-center justify-between py-12">
           <div className="md:w-1/2 mb-12 md:mb-0">
             <h1 className="text-4xl md:text-6xl font-extrabold text-gray-900 leading-tight">
-              用 AI 温暖陪伴
+              {t('landing.hero.title1')}
               <br />
-              <span className="text-indigo-600">每一个童年</span>
+              <span className="text-indigo-600">{t('landing.hero.titleHighlight')}</span>
             </h1>
             <p className="mt-6 text-lg text-gray-700 max-w-lg">
-              捷宝宝是专为3-12岁儿童设计的智能陪伴机器人，融合情感计算、语音交互与教育内容，
-              在保护隐私的前提下，给孩子一个安全、有趣、有成长的AI伙伴。
+              {t('landing.hero.desc')}
             </p>
             <div className="mt-8 flex flex-wrap gap-4">
               <div className="flex items-center">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500 mr-1" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
-                <span className="text-gray-700">通过国家儿童产品安全认证</span>
+                <span className="text-gray-700">{t('landing.hero.cert1')}</span>
               </div>
               <div className="flex items-center">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500 mr-1" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
-                <span className="text-gray-700">端到端加密，数据不出设备</span>
+                <span className="text-gray-700">{t('landing.hero.cert2')}</span>
               </div>
             </div>
           </div>
@@ -58,7 +85,7 @@ const LandingPage: React.FC = () => {
               <div className="w-64 h-64 md:w-80 md:h-80 bg-white rounded-3xl shadow-xl border-8 border-white overflow-hidden transform rotate-3">
                 <img 
                   src={productImg} 
-                  alt="捷宝宝智能机器人" 
+                  alt={`${t('landing.brand')} 智能机器人`} 
                   className="w-full h-full object-contain p-4"
                 />
               </div>
@@ -71,9 +98,9 @@ const LandingPage: React.FC = () => {
       <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-2xl mx-auto">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900">为什么家长选择捷宝宝？</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900">{t('landing.features.title')}</h2>
             <p className="mt-4 text-gray-600">
-              我们专注于儿童发展心理学与AI技术的结合，打造真正懂孩子的智能伙伴。
+              {t('landing.features.desc')}
             </p>
           </div>
 
@@ -81,24 +108,24 @@ const LandingPage: React.FC = () => {
             {[
               {
                 icon: "🧠",
-                title: "情感陪伴",
-                desc: "能识别孩子情绪，主动安慰、鼓励，建立安全依恋关系。"
+                titleKey: "landing.features.item1.title",
+                descKey: "landing.features.item1.desc"
               },
               {
                 icon: "📚",
-                title: "成长内容",
-                desc: "内置分级故事、儿歌、科普知识，内容由教育专家审核。"
+                titleKey: "landing.features.item2.title",
+                descKey: "landing.features.item2.desc"
               },
               {
                 icon: "🔒",
-                title: "隐私优先",
-                desc: "所有语音数据本地处理，不上传云端，家长完全掌控。"
+                titleKey: "landing.features.item3.title",
+                descKey: "landing.features.item3.desc"
               }
             ].map((item, i) => (
               <div key={i} className="bg-gray-50 p-6 rounded-2xl hover:shadow-md transition">
                 <div className="text-4xl mb-4">{item.icon}</div>
-                <h3 className="text-xl font-semibold text-gray-900">{item.title}</h3>
-                <p className="mt-2 text-gray-600">{item.desc}</p>
+                <h3 className="text-xl font-semibold text-gray-900">{t(item.titleKey)}</h3>
+                <p className="mt-2 text-gray-600">{t(item.descKey)}</p>
               </div>
             ))}
           </div>
@@ -108,10 +135,9 @@ const LandingPage: React.FC = () => {
       {/* Trust Section */}
       <section className="py-16 bg-gray-50">
         <div className="container mx-auto px-4 text-center">
-          <h3 className="text-2xl font-bold text-gray-900">已陪伴超过 50,000 个家庭</h3>
+          <h3 className="text-2xl font-bold text-gray-900">{t('landing.trust.title')}</h3>
           <p className="mt-4 text-gray-600 max-w-2xl mx-auto">
-            “捷宝宝不仅是玩具，更是孩子的朋友。他学会了分享，也更愿意表达情绪。”  
-            —— 北京 李妈妈，8岁男孩家长
+            {t('landing.trust.desc')}
           </p>
         </div>
       </section>
@@ -123,17 +149,17 @@ const LandingPage: React.FC = () => {
             <div className="flex items-center space-x-2 mb-6 md:mb-0">
               <img 
                 src={productImg} 
-                alt="捷宝宝" 
+                alt={t('landing.brand')} 
                 className="w-8 h-8 rounded-full object-cover"
               />
-              <span className="text-xl font-bold">捷宝宝 Jabobo</span>
+              <span className="text-xl font-bold">{t('landing.brand')}</span>
             </div>
             <div className="text-gray-400 text-sm">
-              © 2026 捷宝宝科技（北京）有限公司. 保留所有权利。
+              {t('landing.footer.copyright')}
             </div>
           </div>
           <div className="mt-8 pt-8 border-t border-gray-800 text-center text-gray-500 text-sm">
-            本产品仅面向家庭场景，不收集儿童生物特征用于商业用途。
+            {t('landing.footer.privacyNote')}
           </div>
         </div>
       </footer>
