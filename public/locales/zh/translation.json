@@ -54,13 +54,13 @@
     "loginError": "登录失败，请检查网络或账号密码"
   },
   "jaboboSelector": {
-    "title": "Select Your Jabobo",
+    "title": "选择要管理的实体设备",
     "subtitle": "选择要管理的实体设备",
     "deviceCardTitle": "Jabobo Unit",
-    "bindNewBtn": "Bind New Entity",
-    "bindTitle": "Link Device",
-    "inputPlaceholder": "Enter UUID (e.g. 00:11:22:33:44:55 or 123456)",
-    "confirmBindBtn": "Confirm",
+    "bindNewBtn": "绑定新实体",
+    "bindTitle": "链接设备",
+    "inputPlaceholder": "输入 UUID (例如 00:11:22:33:44:55 或 123456)",
+    "confirmBindBtn": "确认",
     "deleteConfirm": "确认删除该设备？",
     "deleteSuccess": "设备删除成功",
     "deleteFail": "设备删除失败",
@@ -70,33 +70,160 @@
       "formatError": "设备ID格式错误（应为xx:xx:xx:xx:xx:xx或6位纯数字）"
     }
   },
-    "dashboard": {
+   
+
+  "dashboard": {
+    "loading": "加载中...",
+    "ready": "已就绪",
+    "synced": "已同步",
+    "defaultPersonaName": "我的AI",
+    "syncSuccess": "✨ 设备同步成功",
+    "syncFailed": "同步失败",
     "switchDevice": "切换设备",
     "activeDevice": "当前设备",
-    "adminRole": "管理员",
-    "userRole": "普通用户",
-    "personaCustom": "人设定制",
+    "admin": "管理员",
+    "user": "用户",
+    "mascot": "吉祥物",
+    "personaCustomization": "人设定制",
     "addPersona": "添加人设",
-    "deletePersonaConfirm": "删除此人设？",
-    "personaNamePlaceholder": "输入名称",
+    "enterName": "输入名称",
+    "cancel": "取消",
+    "confirmDeletePersona": "删除此人设?",
+    "delete": "删除",
+    "personaPlaceholder": "请输入人设内容...",
     "deviceMemory": "设备记忆",
-    "voiceprintSetting": "声纹设置",
+    "memoryPlaceholder": "请输入设备记忆内容...",
+    "voiceprintSettings": "声纹设置",
     "knowledgeBase": "知识库",
     "syncing": "同步中...",
-    "syncConfig": "同步配置到设备",
-    "syncSuccessTip": "✨ 设备 {{last4}} 配置已更新！",
-    "syncFailTip": "同步失败",
+    "syncToDevice": "同步配置到设备",
     "settings": "设置",
-    "adminPanel": "管理员面板",
-    "signOut": "退出登录",
-    "voiceStatusLoading": "加载中...",
-    "kbStatusLoading": "加载中...",
-    "voiceStatusReady": "已就绪",
-    "kbStatusSynced": "已同步",
-    "defaultPersonaName": "我的AI",
-    "personaContentPlaceholder": "输入人设描述内容...",
-    "deviceMemoryPlaceholder": "输入设备记忆内容..."
+    "adminPanel": "管理面板",
+    "signOut": "退出登录"
   },
+  "voiceprint": {
+    "backToDashboard": "返回仪表盘",
+    "description": "选择一段对话片段来训练Jabobo的语音识别模型。",
+    "label": {
+      "selectSource": "选择对话来源",
+      "audioContent": "音频内容",
+      "nameVoiceprint": "为该声纹命名"
+    },
+    "placeholder": {
+      "chooseChat": "选择最近的对话...",
+      "voiceprintExample": "例如：主人的声音"
+    },
+    "loading": {
+      "audioList": "加载音频列表中..."
+    },
+    "processing": {
+      "audio": "正在处理音频..."
+    },
+    "status": {
+      "audioLoaded": "音频已加载"
+    },
+    "prompt": {
+      "selectFile": "选择一个文件..."
+    },
+    "button": {
+      "deleteAudio": "删除当前音频",
+      "rememberVoiceprint": "记住该声纹"
+    },
+    "confirm": {
+      "deleteAudio": "确定要删除这个音频文件吗？删除后无法恢复！"
+    },
+    "success": {
+      "deleteAudio": "音频文件删除成功！"
+    },
+    "error": {
+      "loadListFailed": "加载声纹列表失败",
+      "networkError": "网络异常",
+      "deleteMissingParams": "删除失败：缺少必要的参数",
+      "deleteFailed": "删除失败",
+      "unknownError": "未知错误",
+      "deleteAudioFailed": "删除音频失败"
+    },
+    "log": {
+      "emptyJaboboId": "声纹请求",
+      "requestInfo": "声纹请求",
+      "response": "声纹请求",
+      "noAudioData": "声纹请求",
+      "fetchFailed": "声纹请求",
+      "deletingAudio": "删除音频",
+      "deleteResponse": "删除音频",
+      "refreshFailed": "刷新音频列表",
+      "deleteError": "删除音频"
+    },
+    "emptyData": "空数据",
+    "unknownTime": "未知时间",
+    "noAudioContent": "无音频文本内容"
+  },
+  
+  "knowledgeBase": {
+    "button": {
+      "backToDashboard": "返回仪表盘",
+      "uploadFile": "上传知识库文件",
+      "deleteFile": "删除文件 {{name}}"
+    },
+    "title": {
+      "main": "知识库",
+      "deviceDocuments": "设备文档"
+    },
+    "status": {
+      "uploading": "上传中..."
+    },
+    "fileSize": {
+      "0B": "0 B",
+      "B": "B",
+      "KB": "KB",
+      "MB": "MB",
+      "GB": "GB"
+    },
+    "uploadHint": "仅支持 {{type}} 文件，最大 {{size}}（最多 {{maxFiles}} 个文件，内容 ≤ {{maxBytes}} 字节）",
+    "fileCount": "{{current}}/{{max}} 个文件",
+    "emptyState": {
+      "noFiles": "暂无上传文件"
+    },
+    "tip": {
+      "storageSync": "存储同步",
+      "metadataStorage": "元数据存储在 <code>kb_status</code> (JSON 文本格式)"
+    },
+    "log": {
+      "backendListResponse": "后端列表接口返回:",
+      "backendTip": "后端返回提示:",
+      "fetchListFailed": "获取列表失败:",
+      "uploadFailedDetail": "上传失败详情:",
+      "deleteFailed": "删除失败:"
+    },
+    "error": {
+      "loadListFailed": "加载文件列表失败",
+      "networkError": "网络异常",
+      "listLoading": "❌ 正在加载文件列表，请稍候再试",
+      "exceedFileCount": "❌ 知识库文件总数不能超过{{max}}个，请先删除部分文件后再上传",
+      "invalidFileType": "❌ 只允许上传 {{type}} 文件",
+      "exceedFileSize": "❌ 文件大小不能超过{{size}}",
+      "contentExceedLimit": "❌ 文件内容超过10万字节限制",
+      "readContentFailed": "❌ 读取文件内容失败，请检查文件是否损坏",
+      "invalidTextFile": "❌ 无法读取文件内容，请选择有效的TXT文件",
+      "uploadFailed": "上传失败",
+      "unknownError": "未知错误",
+      "uploadCheckBackend": "上传失败，请检查后端接口是否正常",
+      "deleteFailed": "删除失败"
+    },
+    "success": {
+      "upload": "✨ 知识库同步成功！",
+      "delete": "✅ 文件删除成功！"
+    },
+    "confirm": {
+      "deleteFile": "确定要删除 {{name}} 吗？"
+    },
+    "unknownTime": "未知时间",
+    "current": "当前",
+    "bytes": "字节"
+  },
+
+
+
   "language": {
     "zh": "中文",
     "en": "English"

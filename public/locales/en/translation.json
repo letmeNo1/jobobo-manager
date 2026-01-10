@@ -70,33 +70,159 @@
       "formatError": "Device ID format error (should be xx:xx:xx:xx:xx:xx or 6-digit number)"
     }
   },
-   "dashboard": {
+   
+  "dashboard": {
+    "loading": "Loading...",
+    "ready": "Ready",
+    "synced": "Synced",
+    "defaultPersonaName": "My AI",
+    "syncSuccess": "✨ Device synced successfully",
+    "syncFailed": "Sync Failed",
     "switchDevice": "Switch Device",
     "activeDevice": "Active Device",
-    "adminRole": "Admin",
-    "userRole": "User",
-    "personaCustom": "Persona Customization",
+    "admin": "Admin",
+    "user": "User",
+    "mascot": "Mascot",
+    "personaCustomization": "Persona Customization",
     "addPersona": "Add Persona",
-    "deletePersonaConfirm": "Delete this persona?",
-    "personaNamePlaceholder": "Enter name",
+    "enterName": "Enter Name",
+    "cancel": "Cancel",
+    "confirmDeletePersona": "Delete this persona?",
+    "delete": "Delete",
+    "personaPlaceholder": "Please enter persona content...",
     "deviceMemory": "Device Memory",
-    "voiceprintSetting": "Voiceprint",
+    "memoryPlaceholder": "Please enter device memory content...",
+    "voiceprintSettings": "Voiceprint Settings",
     "knowledgeBase": "Knowledge Base",
     "syncing": "Syncing...",
-    "syncConfig": "Sync Config to Device",
-    "syncSuccessTip": "✨ Device {{last4}} config updated!",
-    "syncFailTip": "Sync failed",
+    "syncToDevice": "Sync Config to Device",
     "settings": "Settings",
     "adminPanel": "Admin Panel",
-    "signOut": "Sign Out",
-    "voiceStatusLoading": "Loading...",
-    "kbStatusLoading": "Loading...",
-    "voiceStatusReady": "Ready",
-    "kbStatusSynced": "Synced",
-    "defaultPersonaName": "My AI",
-    "personaContentPlaceholder": "Enter persona description...",
-    "deviceMemoryPlaceholder": "Enter device memory content..."
+    "signOut": "Sign Out"
   },
+  
+  "voiceprint": {
+    "backToDashboard": "Back to Dashboard",
+    "description": "Select a conversation segment to train Jabobo's voice recognition model.",
+    "label": {
+      "selectSource": "Select Conversation Source",
+      "audioContent": "Audio Content",
+      "nameVoiceprint": "Name this Voiceprint"
+    },
+    "placeholder": {
+      "chooseChat": "Choose a recent chat...",
+      "voiceprintExample": "e.g., Master's Voice"
+    },
+    "loading": {
+      "audioList": "Loading audio list..."
+    },
+    "processing": {
+      "audio": "Processing Audio..."
+    },
+    "status": {
+      "audioLoaded": "Audio Loaded"
+    },
+    "prompt": {
+      "selectFile": "Select a file..."
+    },
+    "button": {
+      "deleteAudio": "Delete current audio",
+      "rememberVoiceprint": "Remember Voiceprint"
+    },
+    "confirm": {
+      "deleteAudio": "Are you sure to delete this audio file? It cannot be recovered after deletion!"
+    },
+    "success": {
+      "deleteAudio": "Audio file deleted successfully!"
+    },
+    "error": {
+      "loadListFailed": "Failed to load voiceprint list",
+      "networkError": "Network error",
+      "deleteMissingParams": "Deletion failed: Missing required parameters",
+      "deleteFailed": "Deletion failed",
+      "unknownError": "Unknown error",
+      "deleteAudioFailed": "Failed to delete audio"
+    },
+    "log": {
+      "emptyJaboboId": "Voiceprint Request",
+      "requestInfo": "Voiceprint Request",
+      "response": "Voiceprint Request",
+      "noAudioData": "Voiceprint Request",
+      "fetchFailed": "Voiceprint Request",
+      "deletingAudio": "Delete Audio",
+      "deleteResponse": "Delete Audio",
+      "refreshFailed": "Refresh Audio List",
+      "deleteError": "Delete Audio"
+    },
+    "emptyData": "Empty data",
+    "unknownTime": "Unknown time",
+    "noAudioContent": "No audio text content"
+  },
+  
+  "knowledgeBase": {
+    "button": {
+      "backToDashboard": "Back to Dashboard",
+      "uploadFile": "Upload Knowledge File",
+      "deleteFile": "Delete file {{name}}"
+    },
+    "title": {
+      "main": "Knowledge Base",
+      "deviceDocuments": "Device Documents"
+    },
+    "status": {
+      "uploading": "Uploading..."
+    },
+    "fileSize": {
+      "0B": "0 B",
+      "B": "B",
+      "KB": "KB",
+      "MB": "MB",
+      "GB": "GB"
+    },
+    "uploadHint": "TXT only, up to {{size}} (Max {{maxFiles}} files total, content ≤ {{maxBytes}} bytes)",
+    "fileCount": "{{current}}/{{max}} files",
+    "emptyState": {
+      "noFiles": "No files uploaded"
+    },
+    "tip": {
+      "storageSync": "Storage Sync",
+      "metadataStorage": "Metadata stored in <code>kb_status</code> (JSON TEXT)"
+    },
+    "log": {
+      "backendListResponse": "Backend list API response:",
+      "backendTip": "Backend tip message:",
+      "fetchListFailed": "Fetch list failed:",
+      "uploadFailedDetail": "Upload failed details:",
+      "deleteFailed": "Delete failed:"
+    },
+    "error": {
+      "loadListFailed": "Failed to load file list",
+      "networkError": "Network error",
+      "listLoading": "❌ File list is loading, please try again later",
+      "exceedFileCount": "❌ Maximum {{max}} files allowed in knowledge base, please delete some files first",
+      "invalidFileType": "❌ Only {{type}} files are allowed",
+      "exceedFileSize": "❌ File size cannot exceed {{size}}",
+      "contentExceedLimit": "❌ File content exceeds 100,000 bytes limit",
+      "readContentFailed": "❌ Failed to read file content, please check if the file is damaged",
+      "invalidTextFile": "❌ Cannot read file content, please select a valid TXT file",
+      "uploadFailed": "Upload failed",
+      "unknownError": "Unknown error",
+      "uploadCheckBackend": "Upload failed, please check if the backend API is working",
+      "deleteFailed": "Delete failed"
+    },
+    "success": {
+      "upload": "✨ Knowledge base synced successfully!",
+      "delete": "✅ File deleted successfully!"
+    },
+    "confirm": {
+      "deleteFile": "Are you sure to delete {{name}}?"
+    },
+    "unknownTime": "Unknown time",
+    "current": "current",
+    "bytes": "bytes"
+  },
+
+
   "language": {
     "zh": "Chinese",
     "en": "English"

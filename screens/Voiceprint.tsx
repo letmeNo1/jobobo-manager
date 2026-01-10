@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, UserPlus, ChevronDown, Mic2, Trash2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next'; // 引入i18n钩子
 import Layout from '../components/Layout';
 import { Screen, ChatHistory } from '../types';
 import Input from '../components/Input';
@@ -35,6 +36,9 @@ const formatFileSize = (bytes: number) => {
 };
 
 const Voiceprint: React.FC<VoiceprintProps> = ({ onNavigate, jaboboId }) => {
+  // 获取i18n翻译函数
+  const { t } = useTranslation();
+  
   const [selectedChat, setSelectedChat] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -50,7 +54,7 @@ const Voiceprint: React.FC<VoiceprintProps> = ({ onNavigate, jaboboId }) => {
   useEffect(() => {
     const fetchVoiceprintList = async () => {
       if (!jaboboId) {
-        console.log("[声纹请求] jaboboId为空，终止请求");
+        console.log(`[${t('voiceprint.log.emptyJaboboId')}] jaboboId为空，终止请求`);
         setIsLoading(false);
         return;
       }
@@ -59,12 +63,12 @@ const Voiceprint: React.FC<VoiceprintProps> = ({ onNavigate, jaboboId }) => {
       const xUsername = localStorage.getItem("username") || "";
       const authorization = localStorage.getItem("auth_token") || "";
 
-      console.log("[声纹请求] 参数信息：", { jaboboId, xUsername, authorization });
+      console.log(`[${t('voiceprint.log.requestInfo')}] 参数信息：`, { jaboboId, xUsername, authorization });
 
       setIsLoading(true);
       try {
         const response = await jaboboVoice.listAudio(jaboboId, xUsername, authorization);
-        console.log("[声纹请求] 接口返回：", response);
+        console.log(`[${t('voiceprint.log.response')}] 接口返回：`, response);
 
         // 适配真实返回的audio_list数据格式
         if (response.success && response.audio_list && Array.isArray(response.audio_list)) {
@@ -78,37 +82,37 @@ const Voiceprint: React.FC<VoiceprintProps> = ({ onNavigate, jaboboId }) => {
             // 时长字段接口没有，保留原占位
             duration: '0:00',
             // 日期取upload_time的日期部分
-            date: item.upload_time.split(' ')[0] || '未知时间'
+            date: item.upload_time.split(' ')[0] || t('voiceprint.unknownTime')
           }));
           setMOCK_CHATS(realData);
         } else {
           setMOCK_CHATS([]);
           setAudioList([]);
-          console.warn("[声纹请求] 无音频数据：", response.message || response.detail || "空数据");
+          console.warn(`[${t('voiceprint.log.noAudioData')}]`, response.message || response.detail || t('voiceprint.emptyData'));
         }
       } catch (error) {
-        console.error("[声纹请求] 获取列表失败：", error);
+        console.error(`[${t('voiceprint.log.fetchFailed')}] 获取列表失败：`, error);
         setMOCK_CHATS([]);
         setAudioList([]);
-        alert(`加载声纹列表失败: ${(error as Error).message || '网络异常'}`);
+        alert(`${t('voiceprint.error.loadListFailed')}: ${(error as Error).message || t('voiceprint.error.networkError')}`);
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchVoiceprintList();
-  }, [jaboboId]);
+  }, [jaboboId, t]); // 添加t到依赖，确保语言切换时重新渲染
 
   // 新增：删除当前选中音频的函数（适配 ApiResponse 类型）
   const handleDeleteSelectedAudio = async () => {
     // 二次确认
-    if (!window.confirm('确定要删除这个音频文件吗？删除后无法恢复！')) {
+    if (!window.confirm(t('voiceprint.confirm.deleteAudio'))) {
       return;
     }
 
     // 校验必要参数
     if (!jaboboId || !selectedChat) {
-      alert('删除失败：缺少必要的参数');
+      alert(t('voiceprint.error.deleteMissingParams'));
       return;
     }
 
@@ -118,7 +122,7 @@ const Voiceprint: React.FC<VoiceprintProps> = ({ onNavigate, jaboboId }) => {
 
     try {
       setIsDeleting(true);
-      console.log(`[删除音频] 开始删除文件: ${selectedChat}`);
+      console.log(`[${t('voiceprint.log.deletingAudio')}] 开始删除文件: ${selectedChat}`);
       
       // 调用删除接口
       const response = await jaboboVoice.deleteAudio(
@@ -128,11 +132,11 @@ const Voiceprint: React.FC<VoiceprintProps> = ({ onNavigate, jaboboId }) => {
         authorization
       );
       
-      console.log('[删除音频] 接口返回：', response);
+      console.log(`[${t('voiceprint.log.deleteResponse')}] 接口返回：`, response);
       
       // 仅使用类型中存在的 success 字段判断
       if (response.success) {
-        alert('音频文件删除成功！');
+        alert(t('voiceprint.success.deleteAudio'));
         
         // 清空选中状态
         setSelectedChat('');
@@ -151,7 +155,7 @@ const Voiceprint: React.FC<VoiceprintProps> = ({ onNavigate, jaboboId }) => {
               id: item.file_path,
               title: `${item.upload_time.split(' ')[0]}: ${item.file_name}`,
               duration: '0:00',
-              date: item.upload_time.split(' ')[0] || '未知时间'
+              date: item.upload_time.split(' ')[0] || t('voiceprint.unknownTime')
             }));
             setMOCK_CHATS(newChats);
           } else {
@@ -161,15 +165,15 @@ const Voiceprint: React.FC<VoiceprintProps> = ({ onNavigate, jaboboId }) => {
         } else {
           setMOCK_CHATS([]);
           setAudioList([]);
-          console.warn('[刷新音频列表] 接口返回失败：', reloadResponse.message || reloadResponse.detail);
+          console.warn(`[${t('voiceprint.log.refreshFailed')}] 接口返回失败：`, reloadResponse.message || reloadResponse.detail);
         }
       } else {
         // 优先用 message，其次用 detail 展示错误信息
-        alert(`删除失败：${response.message || response.detail || '未知错误'}`);
+        alert(`${t('voiceprint.error.deleteFailed')}：${response.message || response.detail || t('voiceprint.error.unknownError')}`);
       }
     } catch (error) {
-      console.error('[删除音频] 失败：', error);
-      alert(`删除音频失败: ${(error as Error).message || '网络异常'}`);
+      console.error(`[${t('voiceprint.log.deleteError')}] 失败：`, error);
+      alert(`${t('voiceprint.error.deleteAudioFailed')}: ${(error as Error).message || t('voiceprint.error.networkError')}`);
     } finally {
       setIsDeleting(false);
     }
@@ -182,7 +186,7 @@ const Voiceprint: React.FC<VoiceprintProps> = ({ onNavigate, jaboboId }) => {
     // 查找选中音频的content
     if (val) {
       const selectedAudio = audioList.find(item => item.file_path === val);
-      setSelectedAudioContent(selectedAudio?.audio_content || '无音频文本内容');
+      setSelectedAudioContent(selectedAudio?.audio_content || t('voiceprint.noAudioContent'));
       
       setIsProcessing(true);
       setIsLoaded(false);
@@ -200,7 +204,11 @@ const Voiceprint: React.FC<VoiceprintProps> = ({ onNavigate, jaboboId }) => {
   return (
     <Layout className="bg-white">
       <div className="p-6">
-        <button onClick={() => onNavigate('DASHBOARD')} className="mb-6 p-2 bg-gray-50 rounded-full text-gray-600">
+        <button 
+          onClick={() => onNavigate('DASHBOARD')} 
+          className="mb-6 p-2 bg-gray-50 rounded-full text-gray-600"
+          aria-label={t('voiceprint.backToDashboard')}
+        >
           <ArrowLeft size={20} />
         </button>
 
@@ -209,12 +217,12 @@ const Voiceprint: React.FC<VoiceprintProps> = ({ onNavigate, jaboboId }) => {
             <UserPlus size={32} />
           </div>
           <p className="text-center text-sm text-gray-500 px-6">
-            Select a conversation segment to train Jabobo's voice recognition model.
+            {t('voiceprint.description')}
           </p>
         </div>
 
         <div className="mb-8">
-          <label className="block text-gray-700 font-bold text-sm mb-2">Select Conversation Source</label>
+          <label className="block text-gray-700 font-bold text-sm mb-2">{t('voiceprint.label.selectSource')}</label>
           <div className="relative">
             <select 
               className="w-full bg-gray-50 border border-gray-100 rounded-xl py-4 px-4 appearance-none text-gray-700 focus:outline-none focus:ring-2 focus:ring-yellow-400"
@@ -222,9 +230,9 @@ const Voiceprint: React.FC<VoiceprintProps> = ({ onNavigate, jaboboId }) => {
               onChange={handleChatSelect}
               disabled={isLoading}
             >
-              <option value="">Choose a recent chat...</option>
+              <option value="">{t('voiceprint.placeholder.chooseChat')}</option>
               {isLoading ? (
-                <option value="" disabled>Loading audio list...</option>
+                <option value="" disabled>{t('voiceprint.loading.audioList')}</option>
               ) : (
                 MOCK_CHATS.map(chat => {
                   // 从audioList状态中查找对应的音频项
@@ -253,7 +261,7 @@ const Voiceprint: React.FC<VoiceprintProps> = ({ onNavigate, jaboboId }) => {
                     <div key={i} className={`w-1 h-6 bg-yellow-400 rounded-full animate-bounce`} style={{ animationDelay: `${i * 0.1}s` }}></div>
                   ))}
                 </div>
-                <span className="text-xs text-gray-400 font-medium">Processing Audio...</span>
+                <span className="text-xs text-gray-400 font-medium">{t('voiceprint.processing.audio')}</span>
               </div>
             ) : isLoaded ? (
               <div className="flex flex-col items-center w-full">
@@ -263,18 +271,18 @@ const Voiceprint: React.FC<VoiceprintProps> = ({ onNavigate, jaboboId }) => {
                     <div key={i} className={`w-1 bg-yellow-400 rounded-full h-${h === 1 ? '2' : h === 2 ? '4' : h === 3 ? '6' : h === 4 ? '8' : '10'}`}></div>
                   ))}
                 </div>
-                <span className="text-xs text-gray-600 font-bold mb-3">Audio Loaded</span>
+                <span className="text-xs text-gray-600 font-bold mb-3">{t('voiceprint.status.audioLoaded')}</span>
                 
                 {/* 新增Audio Content展示区域 */}
                 <div className="w-full bg-white rounded-xl p-3 border border-gray-200 mt-2">
                   <div className="flex justify-between items-start mb-1">
-                    <h4 className="text-xs font-bold text-gray-700">Audio Content</h4>
+                    <h4 className="text-xs font-bold text-gray-700">{t('voiceprint.label.audioContent')}</h4>
                     {/* 新增：选中后显示删除按钮 */}
                     <button
                       onClick={handleDeleteSelectedAudio}
                       disabled={isDeleting}
                       className="p-1 text-red-500 hover:bg-red-50 rounded-full transition-colors"
-                      aria-label="删除当前音频"
+                      aria-label={t('voiceprint.button.deleteAudio')}
                     >
                       {isDeleting ? (
                         <div className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
@@ -284,14 +292,14 @@ const Voiceprint: React.FC<VoiceprintProps> = ({ onNavigate, jaboboId }) => {
                     </button>
                   </div>
                   <p className="text-sm text-gray-600 whitespace-pre-wrap break-words">
-                    {selectedAudioContent || '无音频文本内容'}
+                    {selectedAudioContent || t('voiceprint.noAudioContent')}
                   </p>
                 </div>
               </div>
             ) : (
               <div className="flex flex-col items-center text-gray-300">
                 <Mic2 size={32} className="mb-2" />
-                <span className="text-xs">Select a file...</span>
+                <span className="text-xs">{t('voiceprint.prompt.selectFile')}</span>
               </div>
             )}
           </div>
@@ -299,13 +307,16 @@ const Voiceprint: React.FC<VoiceprintProps> = ({ onNavigate, jaboboId }) => {
 
         {isLoaded && (
           <div className="animate-in fade-in duration-500">
-            <Input label="Name this Voiceprint" placeholder="e.g., Master's Voice" />
+            <Input 
+              label={t('voiceprint.label.nameVoiceprint')} 
+              placeholder={t('voiceprint.placeholder.voiceprintExample')} 
+            />
             <button 
               onClick={() => onNavigate('DASHBOARD')}
               className="w-full yellow-button py-4 rounded-2xl flex items-center justify-center font-bold mt-4 shadow-sm"
             >
               <Mic2 size={20} className="mr-2" />
-              <span>Remember Voiceprint</span>
+              <span>{t('voiceprint.button.rememberVoiceprint')}</span>
             </button>
           </div>
         )}

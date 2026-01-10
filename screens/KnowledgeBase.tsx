@@ -8,6 +8,7 @@ import {
   Loader2, 
   Inbox 
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next'; // 引入i18n钩子
 import Layout from '../components/Layout';
 import { Screen, Document, BackendFileInfo } from '../types';
 import { JaboboKnownledgeBase } from '../api/jabobo_knowledge_base';
@@ -18,6 +19,9 @@ interface KnowledgeBaseProps {
 }
 
 const KnowledgeBase: React.FC<KnowledgeBaseProps> = ({ jaboboId, onNavigate }) => {
+  // 获取i18n翻译函数
+  const { t } = useTranslation();
+  
   // 状态管理
   const [docs, setDocs] = useState<Document[]>([]);
   const [isUploading, setIsUploading] = useState(false);
@@ -31,9 +35,9 @@ const KnowledgeBase: React.FC<KnowledgeBaseProps> = ({ jaboboId, onNavigate }) =
 
   // 辅助函数：格式化字节大小
   const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return '0 B';
+    if (bytes === 0) return t('knowledgeBase.fileSize.0B');
     const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const sizes = [t('knowledgeBase.fileSize.B'), t('knowledgeBase.fileSize.KB'), t('knowledgeBase.fileSize.MB'), t('knowledgeBase.fileSize.GB')];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     
     return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
@@ -42,7 +46,7 @@ const KnowledgeBase: React.FC<KnowledgeBaseProps> = ({ jaboboId, onNavigate }) =
   // 加载文件列表
   useEffect(() => {
     fetchFileList();
-  }, [jaboboId]);
+  }, [jaboboId, t]); // 添加t到依赖，确保语言切换时重新渲染
 
   // 获取文件列表
   const fetchFileList = async (): Promise<void> => {
@@ -51,26 +55,26 @@ const KnowledgeBase: React.FC<KnowledgeBaseProps> = ({ jaboboId, onNavigate }) =
     setIsLoading(true);
     try {
       const res = await JaboboKnownledgeBase.listKnowledgeBase(jaboboId);
-      console.log('后端列表接口返回:', res);
+      console.log(t('knowledgeBase.log.backendListResponse'), res);
 
       if (res.success && res.kb_list && Array.isArray(res.kb_list)) {
         const mappedDocs: Document[] = res.kb_list.map((file: BackendFileInfo) => ({
           id: file.file_path,
           name: file.file_name,
           size: formatFileSize(file.file_size_bytes),
-          date: file.upload_time || '未知时间',
+          date: file.upload_time || t('knowledgeBase.unknownTime'),
           filePath: file.file_path
         }));
         setDocs(mappedDocs);
       } else {
         setDocs([]);
         if (res.message) {
-          console.warn('后端返回提示:', res.message);
+          console.warn(t('knowledgeBase.log.backendTip'), res.message);
         }
       }
     } catch (err: any) {
-      console.error("获取列表失败:", err);
-      alert(`加载文件列表失败: ${err.message || '网络异常'}`);
+      console.error(t('knowledgeBase.log.fetchListFailed'), err);
+      alert(`${t('knowledgeBase.error.loadListFailed')}: ${err.message || t('knowledgeBase.error.networkError')}`);
       setDocs([]);
     } finally {
       setIsLoading(false);
@@ -90,20 +94,20 @@ const KnowledgeBase: React.FC<KnowledgeBaseProps> = ({ jaboboId, onNavigate }) =
           const byteLength = new TextEncoder().encode(content).length;
           
           if (byteLength > MAX_TEXT_LENGTH) {
-            alert(`❌ 文件内容超过10万字节限制（当前：${byteLength}字节）`);
+            alert(`${t('knowledgeBase.error.contentExceedLimit')}（${t('knowledgeBase.current')}：${byteLength}${t('knowledgeBase.bytes')}）`);
             resolve(false);
           } else {
             resolve(true);
           }
         } catch (err) {
-          alert("❌ 读取文件内容失败，请检查文件是否损坏");
+          alert(t('knowledgeBase.error.readContentFailed'));
           resolve(false);
         }
       };
       
       // 读取失败处理
       reader.onerror = () => {
-        alert("❌ 无法读取文件内容，请选择有效的TXT文件");
+        alert(t('knowledgeBase.error.invalidTextFile'));
         resolve(false);
       };
       
@@ -121,13 +125,13 @@ const KnowledgeBase: React.FC<KnowledgeBaseProps> = ({ jaboboId, onNavigate }) =
 
     // 1. 检查列表是否加载完成
     if (isLoading) {
-      alert("❌ 正在加载文件列表，请稍候再试");
+      alert(t('knowledgeBase.error.listLoading'));
       return;
     }
 
     // 2. 限制文件总数不超过10个
     if (docs.length >= MAX_FILE_COUNT) {
-      alert(`❌ 知识库文件总数不能超过${MAX_FILE_COUNT}个，请先删除部分文件后再上传`);
+      alert(t('knowledgeBase.error.exceedFileCount', { max: MAX_FILE_COUNT }));
       return;
     }
 
@@ -141,13 +145,13 @@ const KnowledgeBase: React.FC<KnowledgeBaseProps> = ({ jaboboId, onNavigate }) =
     }
     
     if (fileExt !== ALLOWED_FILE_TYPE) {
-      alert(`❌ 只允许上传 ${ALLOWED_FILE_TYPE.toUpperCase()} 文件`);
+      alert(t('knowledgeBase.error.invalidFileType', { type: ALLOWED_FILE_TYPE.toUpperCase() }));
       return;
     }
 
     // 4. 校验文件大小（5MB）
     if (file.size > MAX_FILE_SIZE) {
-      alert(`❌ 文件大小不能超过${formatFileSize(MAX_FILE_SIZE)}`);
+      alert(t('knowledgeBase.error.exceedFileSize', { size: formatFileSize(MAX_FILE_SIZE) }));
       return;
     }
 
@@ -163,14 +167,14 @@ const KnowledgeBase: React.FC<KnowledgeBaseProps> = ({ jaboboId, onNavigate }) =
       const res = await JaboboKnownledgeBase.uploadKnowledgeBase(jaboboId, file);
       
       if (res.success) {
-        alert("✨ 知识库同步成功！");
+        alert(t('knowledgeBase.success.upload'));
         await fetchFileList(); // 重新加载列表
       } else {
-        alert(`上传失败: ${res.message || res.detail || "未知错误"}`);
+        alert(`${t('knowledgeBase.error.uploadFailed')}: ${res.message || res.detail || t('knowledgeBase.error.unknownError')}`);
       }
     } catch (err: any) {
-      console.error("上传失败详情:", err);
-      alert(`网络错误: ${err.message || "上传失败，请检查后端接口是否正常"}`);
+      console.error(t('knowledgeBase.log.uploadFailedDetail'), err);
+      alert(`${t('knowledgeBase.error.networkError')}: ${err.message || t('knowledgeBase.error.uploadCheckBackend')}`);
     } finally {
       setIsUploading(false);
       e.target.value = ""; // 重置文件选择框
@@ -179,20 +183,20 @@ const KnowledgeBase: React.FC<KnowledgeBaseProps> = ({ jaboboId, onNavigate }) =
 
   // 处理文件删除
   const handleDelete = async (filePath: string, fileName: string): Promise<void> => {
-    if (!window.confirm(`确定要删除 ${fileName} 吗？`)) return;
+    if (!window.confirm(t('knowledgeBase.confirm.deleteFile', { name: fileName }))) return;
     
     try {
       const res = await JaboboKnownledgeBase.deleteKnowledgeBase(jaboboId, filePath);
       
       if (res.success) {
-        alert("✅ 文件删除成功！");
+        alert(t('knowledgeBase.success.delete'));
         await fetchFileList(); // 重新加载列表
       } else {
-        alert(`删除失败: ${res.message || res.detail || "未知错误"}`);
+        alert(`${t('knowledgeBase.error.deleteFailed')}: ${res.message || res.detail || t('knowledgeBase.error.unknownError')}`);
       }
     } catch (err) {
-      console.error("删除失败:", err);
-      alert(`删除失败: ${(err as Error).message}`);
+      console.error(t('knowledgeBase.log.deleteFailed'), err);
+      alert(`${t('knowledgeBase.error.deleteFailed')}: ${(err as Error).message}`);
     }
   };
 
@@ -204,12 +208,13 @@ const KnowledgeBase: React.FC<KnowledgeBaseProps> = ({ jaboboId, onNavigate }) =
         <button 
           onClick={() => onNavigate('DASHBOARD')} 
           className="mb-6 p-2 bg-gray-50 rounded-full text-gray-600 active:scale-95 transition-transform"
+          aria-label={t('knowledgeBase.button.backToDashboard')}
         >
           <ArrowLeft size={20} />
         </button>
 
         {/* 标题 */}
-        <h1 className="text-xl font-bold text-gray-800 mb-6">Knowledge Base</h1>
+        <h1 className="text-xl font-bold text-gray-800 mb-6">{t('knowledgeBase.title.main')}</h1>
 
         {/* 上传区域 */}
         <label className={`mb-8 block cursor-pointer ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}>
@@ -225,20 +230,25 @@ const KnowledgeBase: React.FC<KnowledgeBaseProps> = ({ jaboboId, onNavigate }) =
               {isUploading ? <Loader2 size={24} className="animate-spin" /> : <UploadCloud size={24} />}
             </div>
             <h3 className="font-bold text-gray-800 mb-1">
-              {isUploading ? 'Uploading...' : 'Upload Knowledge File'}
+              {isUploading ? t('knowledgeBase.status.uploading') : t('knowledgeBase.button.uploadFile')}
             </h3>
             {/* 新增：提示文本内容限制 */}
             <p className="text-xs text-gray-400">
-              TXT only, up to 5MB (Max 10 files total, content ≤ 100,000 bytes)
+              {t('knowledgeBase.uploadHint', { 
+                type: ALLOWED_FILE_TYPE.toUpperCase(), 
+                size: formatFileSize(MAX_FILE_SIZE),
+                maxFiles: MAX_FILE_COUNT,
+                maxBytes: MAX_TEXT_LENGTH 
+              })}
             </p>
           </div>
         </label>
 
         {/* 文件列表标题 */}
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-bold text-gray-800">Device Documents</h2>
+          <h2 className="font-bold text-gray-800">{t('knowledgeBase.title.deviceDocuments')}</h2>
           <span className="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded-full">
-            {docs.length}/{MAX_FILE_COUNT} files
+            {t('knowledgeBase.fileCount', { current: docs.length, max: MAX_FILE_COUNT })}
           </span>
         </div>
 
@@ -266,6 +276,7 @@ const KnowledgeBase: React.FC<KnowledgeBaseProps> = ({ jaboboId, onNavigate }) =
                 <button 
                   onClick={() => handleDelete(doc.filePath, doc.name)} 
                   className="p-2 text-gray-300 hover:text-red-500 transition-colors"
+                  aria-label={t('knowledgeBase.button.deleteFile', { name: doc.name })}
                 >
                   <Trash2 size={16} />
                 </button>
@@ -274,7 +285,7 @@ const KnowledgeBase: React.FC<KnowledgeBaseProps> = ({ jaboboId, onNavigate }) =
           ) : (
             <div className="py-12 flex flex-col items-center justify-center text-gray-300 border-2 border-dotted border-gray-100 rounded-3xl">
               <Inbox size={32} className="mb-2 opacity-20" />
-              <p className="text-sm font-medium">No files uploaded</p>
+              <p className="text-sm font-medium">{t('knowledgeBase.emptyState.noFiles')}</p>
             </div>
           )}
         </div>
@@ -283,9 +294,9 @@ const KnowledgeBase: React.FC<KnowledgeBaseProps> = ({ jaboboId, onNavigate }) =
         <div className="mt-8 p-4 bg-blue-50 rounded-2xl flex items-start space-x-3">
           <ShieldAlert size={18} className="text-blue-500 mt-0.5" />
           <div className="flex-1">
-            <h4 className="text-xs font-bold text-blue-800 mb-1">Storage Sync</h4>
+            <h4 className="text-xs font-bold text-blue-800 mb-1">{t('knowledgeBase.tip.storageSync')}</h4>
             <p className="text-[10px] text-blue-600 leading-relaxed font-mono">
-              Metadata stored in <code>kb_status</code> (JSON TEXT)
+              {t('knowledgeBase.tip.metadataStorage')}
             </p>
           </div>
         </div>

@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Waves, Book, UserCircle, Brain, RefreshCw, Plus, Settings2, Users, LogOut, Loader2, ChevronLeft, Cpu, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next'; // 引入i18n钩子
 import Layout from '../components/Layout';
 import { Screen, Persona } from '../types';
 import { UserConfig } from '../api/user';
@@ -25,18 +26,18 @@ const Dashboard: React.FC<DashboardProps> = ({
   setActivePersonaId, onUpdatePersona, onAddPersona, onDeletePersona, 
   memory, setMemory 
 }) => {
+  // 获取i18n翻译函数
+  const { t } = useTranslation();
   
   const activePersona = personas.find(p => p.id === activePersonaId) || personas[0] || { content: '' };
   const [currentUser, setCurrentUser] = useState<{ username: string; role: string } | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
-  const [voiceStatus, setVoiceStatus] = useState('加载中...');
-  const [kbStatus, setKbStatus] = useState('加载中...');
-  // 新增：编辑状态相关状态
+  const [voiceStatus, setVoiceStatus] = useState(t('dashboard.loading')); // 翻译加载中
+  const [kbStatus, setKbStatus] = useState(t('dashboard.loading')); // 翻译加载中
   const [editingPersonaId, setEditingPersonaId] = useState<string | null>(null);
   const [tempPersonaName, setTempPersonaName] = useState('');
   const nameInputRef = useRef<HTMLInputElement>(null);
 
-  // 💡 当 jaboboId 变动时，必须重新抓取该设备的特定配置
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
     if (savedUser) {
@@ -47,46 +48,42 @@ const Dashboard: React.FC<DashboardProps> = ({
     }
   }, [jaboboId]); 
 
-  // 新增：编辑状态切换时自动聚焦输入框
   useEffect(() => {
     if (editingPersonaId && nameInputRef.current) {
       nameInputRef.current.focus();
-      // 全选文本方便直接输入
       nameInputRef.current.select();
     }
   }, [editingPersonaId]);
 
   const fetchServerConfig = async () => {
     try {
-      const res = await JaboboConfig.getUserConfig(jaboboId); // 获取当前设备的 JSON
+      const res = await JaboboConfig.getUserConfig(jaboboId);
       if (res.success && res.data) {
         const rawPersona = res.data.persona;
         try {
           const parsed = JSON.parse(rawPersona);
           if (Array.isArray(parsed) && parsed.length > 0) {
             setPersonas(parsed);
-            setActivePersonaId(parsed[0].id); // 选中该设备配置的第一项
+            setActivePersonaId(parsed[0].id);
           }
         } catch (e) {
           if (rawPersona) {
-            setPersonas([{ id: 'default', name: 'My AI', content: rawPersona }]);
+            setPersonas([{ id: 'default', name: t('dashboard.defaultPersonaName'), content: rawPersona }]); // 翻译默认人设名称
             setActivePersonaId('default');
           }
         }
         setMemory(res.data.memory || '');
-        setVoiceStatus(res.data.voice_status || '已就绪');
-        setKbStatus(res.data.kb_status || '已同步');
+        setVoiceStatus(res.data.voice_status || t('dashboard.ready')); // 翻译已就绪
+        setKbStatus(res.data.kb_status || t('dashboard.synced')); // 翻译已同步
       }
     } catch (err) { console.error(err); }
   };
 
-  // 新增：开始编辑人设名称
   const startEditingPersonaName = (persona: Persona) => {
     setEditingPersonaId(persona.id);
     setTempPersonaName(persona.name);
   };
 
-  // 新增：确认修改人设名称
   const confirmPersonaNameChange = () => {
     if (!editingPersonaId || !tempPersonaName.trim()) return;
     
@@ -98,7 +95,6 @@ const Dashboard: React.FC<DashboardProps> = ({
     setEditingPersonaId(null);
   };
 
-  // 新增：取消编辑人设名称
   const cancelPersonaNameEdit = () => {
     setEditingPersonaId(null);
     setTempPersonaName('');
@@ -109,12 +105,10 @@ const Dashboard: React.FC<DashboardProps> = ({
     setIsSyncing(true);
     
     try {
-      // 1. 重排当前设备的数组
       const selected = personas.find(p => p.id === activePersonaId);
       if (!selected) return;
       const newOrdered = [selected, ...personas.filter(p => p.id !== activePersonaId)];
 
-      // 2. 仅同步到当前选中的 jaboboId
       const payload: UserConfig = {
         persona: JSON.stringify(newOrdered), 
         memory: memory,
@@ -126,10 +120,10 @@ const Dashboard: React.FC<DashboardProps> = ({
       
       if (res.success) {
         setPersonas(newOrdered);
-        alert(`✨ 设备 ${jaboboId.slice(-4)} 配置已更新！`);
+        alert(`${t('dashboard.syncSuccess')} ${jaboboId.slice(-4)}！`); // 翻译同步成功提示
       }
     } catch (err) {
-      alert("同步失败");
+      alert(t('dashboard.syncFailed')); // 翻译同步失败提示
     } finally {
       setIsSyncing(false);
     }
@@ -147,7 +141,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     <Layout className="bg-gray-50 pb-12">
       <div className="bg-white px-6 pt-6 flex justify-between items-center">
         <button onClick={() => onNavigate('SELECT_JABOBO')} className="flex items-center text-gray-400 hover:text-yellow-500 font-black text-[10px] uppercase tracking-widest transition-all">
-          <ChevronLeft size={16} className="mr-1" /> Switch Device
+          <ChevronLeft size={16} className="mr-1" /> {t('dashboard.switchDevice')} {/* 翻译切换设备 */}
         </button>
         <div className="flex items-center space-x-2 px-3 py-1 rounded-full bg-gray-50 border border-gray-100 font-mono text-[10px] font-bold text-gray-400">
           <Cpu size={12} className="text-yellow-500" />
@@ -158,16 +152,16 @@ const Dashboard: React.FC<DashboardProps> = ({
       <div className="bg-white p-6 pb-12 rounded-b-[40px] shadow-sm mb-6 flex flex-col items-center">
         <div className="w-full flex justify-between items-center mb-4 px-2">
           <div className="flex flex-col">
-            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Active Device</span>
+            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('dashboard.activeDevice')}</span> {/* 翻译活跃设备 */}
             <h2 className="text-xl font-black text-gray-900">{currentUser.username}</h2>
           </div>
           <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase ${currentUser.role === 'Admin' ? 'bg-yellow-100 text-yellow-700' : 'bg-blue-100 text-blue-700'}`}>
-            {currentUser.role}
+            {currentUser.role === 'Admin' ? t('dashboard.admin') : t('dashboard.user')} {/* 翻译角色 */}
           </div>
         </div>
         <div className="relative mb-6">
           <div className="w-56 h-72 bg-gray-50 rounded-3xl overflow-hidden flex items-center justify-center p-4">
-            <img src={dashboadImg} alt="Mascot" className="w-full h-full object-contain" />
+            <img src={dashboadImg} alt={t('dashboard.mascot')} className="w-full h-full object-contain" /> {/* 翻译图片alt */}
           </div>
           <div className="absolute bottom-[-10px] left-1/2 -translate-x-1/2 bg-yellow-400 text-gray-900 px-6 py-1 rounded-full font-black text-sm shadow-md uppercase">Jabobo</div>
         </div>
@@ -176,13 +170,14 @@ const Dashboard: React.FC<DashboardProps> = ({
       <div className="px-6 mb-4">
         <div className="bg-white p-5 rounded-[24px] shadow-sm border border-white">
           <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center text-yellow-500"><UserCircle size={20} className="mr-2" /><h3 className="font-bold text-gray-800">人设定制</h3></div>
-            <button onClick={onAddPersona} className="p-2 bg-gray-50 rounded-xl text-gray-400 hover:text-yellow-500 active:scale-95"><Plus size={18} /></button>
+            <div className="flex items-center text-yellow-500"><UserCircle size={20} className="mr-2" /><h3 className="font-bold text-gray-800">{t('dashboard.personaCustomization')}</h3></div> {/* 翻译人设定制 */}
+            <button onClick={onAddPersona} className="p-2 bg-gray-50 rounded-xl text-gray-400 hover:text-yellow-500 active:scale-95" aria-label={t('dashboard.addPersona')}> {/* 翻译添加人设 */}
+              <Plus size={18} />
+            </button>
           </div>
           <div className="flex space-x-2 overflow-x-auto pb-4 no-scrollbar">
             {personas.map((p) => (
               <div key={p.id} className="relative group flex-shrink-0 pt-1 pr-1">
-                {/* 修改：添加双击事件，修改按钮内容支持编辑状态 */}
                 <div
                   onClick={() => setActivePersonaId(p.id)}
                   onDoubleClick={() => startEditingPersonaName(p)}
@@ -203,7 +198,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                         }}
                         onBlur={confirmPersonaNameChange}
                         className="w-full bg-transparent border-none outline-none text-xs font-black"
-                        placeholder="输入名称"
+                        placeholder={t('dashboard.enterName')} // 翻译输入名称
                       />
                       <button 
                         onClick={(e) => {
@@ -211,6 +206,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                           cancelPersonaNameEdit();
                         }}
                         className="ml-1 text-gray-400 hover:text-gray-600"
+                        aria-label={t('dashboard.cancel')} // 翻译取消
                       >
                         <X size={10} strokeWidth={3} />
                       </button>
@@ -221,8 +217,12 @@ const Dashboard: React.FC<DashboardProps> = ({
                 </div>
                 {personas.length > 1 && (
                   <button
-                    onClick={(e) => { e.stopPropagation(); if (window.confirm(`删除此人设?`)) onDeletePersona(p.id); }}
+                    onClick={(e) => { 
+                      e.stopPropagation(); 
+                      if (window.confirm(t('dashboard.confirmDeletePersona'))) onDeletePersona(p.id); // 翻译删除确认
+                    }}
                     className="absolute -top-1 -right-1 p-1 bg-red-500 text-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                    aria-label={t('dashboard.delete')} // 翻译删除
                   >
                     <X size={10} strokeWidth={4} />
                   </button>
@@ -234,14 +234,20 @@ const Dashboard: React.FC<DashboardProps> = ({
             value={activePersona.content}
             onChange={(e) => onUpdatePersona(activePersonaId, e.target.value)}
             className="w-full bg-gray-50 rounded-2xl p-4 text-sm text-gray-600 focus:outline-none min-h-[120px] resize-none"
+            placeholder={t('dashboard.personaPlaceholder')} // 翻译人设输入占位符
           />
         </div>
       </div>
 
       <div className="px-6 mb-6">
         <div className="bg-white p-5 rounded-[24px] shadow-sm border border-white">
-          <div className="flex items-center mb-3 text-yellow-500"><Brain size={20} className="mr-2" /><h3 className="font-bold text-gray-800">设备记忆</h3></div>
-          <textarea value={memory} onChange={(e) => setMemory(e.target.value)} className="w-full bg-gray-50 rounded-2xl p-4 text-sm text-gray-600 min-h-[80px] resize-none" />
+          <div className="flex items-center mb-3 text-yellow-500"><Brain size={20} className="mr-2" /><h3 className="font-bold text-gray-800">{t('dashboard.deviceMemory')}</h3></div> {/* 翻译设备记忆 */}
+          <textarea 
+            value={memory} 
+            onChange={(e) => setMemory(e.target.value)} 
+            className="w-full bg-gray-50 rounded-2xl p-4 text-sm text-gray-600 min-h-[80px] resize-none"
+            placeholder={t('dashboard.memoryPlaceholder')} // 翻译记忆输入占位符
+          />
         </div>
       </div>
 
@@ -250,7 +256,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           <div className="w-12 h-12 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center mb-3">
             <Waves size={24} />
           </div>
-          <span className="font-black text-gray-800 text-xs">声纹设置</span>
+          <span className="font-black text-gray-800 text-xs">{t('dashboard.voiceprintSettings')}</span> {/* 翻译声纹设置 */}
           <span className="text-[9px] text-gray-300 mt-1 font-bold uppercase tracking-widest">Voice</span>
         </button>
 
@@ -258,7 +264,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           <div className="w-12 h-12 bg-purple-50 text-purple-500 rounded-2xl flex items-center justify-center mb-3">
             <Book size={24} />
           </div>
-          <span className="font-black text-gray-800 text-xs">知识库</span>
+          <span className="font-black text-gray-800 text-xs">{t('dashboard.knowledgeBase')}</span> {/* 翻译知识库 */}
           <span className="text-[9px] text-gray-300 mt-1 font-bold uppercase tracking-widest">Library</span>
         </button>
       </div>
@@ -266,27 +272,26 @@ const Dashboard: React.FC<DashboardProps> = ({
       <div className="px-6 mb-12">
         <button onClick={handleSync} disabled={isSyncing} className="w-full bg-yellow-400 py-5 rounded-3xl flex items-center justify-center font-black text-lg shadow-xl active:scale-[0.98] disabled:opacity-70 text-gray-900 transition-all">
           {isSyncing ? <Loader2 size={22} className="mr-3 animate-spin" /> : <RefreshCw size={22} className="mr-3" />}
-          <span>{isSyncing ? '同步中...' : '同步配置到设备'}</span>
+          <span>{isSyncing ? t('dashboard.syncing') : t('dashboard.syncToDevice')}</span> {/* 翻译同步相关文本 */}
         </button>
       </div>
 
       <div className="px-6 border-t border-gray-100 pt-8 flex justify-center gap-x-8">
         <button onClick={() => onNavigate('SETTINGS')} className="flex items-center text-gray-400 text-[10px] font-black uppercase tracking-widest hover:text-gray-900 transition-colors">
-          <Settings2 size={16} className="mr-2" /> Settings
+          <Settings2 size={16} className="mr-2" /> {t('dashboard.settings')} {/* 翻译设置 */}
         </button>
         
-        {/* 新增：Admin 入口按钮 - 仅 Admin 角色可见 */}
         {currentUser.role === 'Admin' && (
           <button 
             onClick={() => onNavigate('ADMIN')} 
             className="flex items-center text-yellow-500 text-[10px] font-black uppercase tracking-widest hover:text-yellow-600 transition-colors"
           >
-            <Users size={16} className="mr-2" /> Admin Panel
+            <Users size={16} className="mr-2" /> {t('dashboard.adminPanel')} {/* 翻译管理面板 */}
           </button>
         )}
         
         <button onClick={handleLogout} className="flex items-center text-gray-400 text-[10px] font-black uppercase tracking-widest hover:text-red-500 transition-colors">
-          <LogOut size={16} className="mr-2" /> Sign Out
+          <LogOut size={16} className="mr-2" /> {t('dashboard.signOut')} {/* 翻译退出登录 */}
         </button>
       </div>
     </Layout>
