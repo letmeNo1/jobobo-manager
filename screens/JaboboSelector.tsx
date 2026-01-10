@@ -15,6 +15,8 @@ const JaboboSelector: React.FC<JaboboSelectorProps> = ({ onSelect, onNavigate })
   const [isLoading, setIsLoading] = useState(true);
   const [isBinding, setIsBinding] = useState(false);
   const [inputUuid, setInputUuid] = useState('');
+  // 新增：校验错误提示状态
+  const [validateError, setValidateError] = useState('');
   // 新增状态：删除确认、删除加载中
   const [deleteConfirmUuid, setDeleteConfirmUuid] = useState<string | null>(null);
   const [deletingUuid, setDeletingUuid] = useState<string | null>(null);
@@ -38,10 +40,43 @@ const JaboboSelector: React.FC<JaboboSelectorProps> = ({ onSelect, onNavigate })
     }
   };
 
-  // 3. 绑定逻辑：调用 API 绑定后重新刷新列表
+  // 新增：设备ID格式校验函数
+  const validateJaboboId = (id: string): { valid: boolean; message: string } => {
+    // 去除首尾空格并转大写（保持格式统一）
+    const trimmedId = id.trim().toUpperCase();
+    
+    // 空值校验
+    if (!trimmedId) {
+      return { valid: false, message: "设备ID不能为空" };
+    }
+
+    // 两种合法格式：MAC格式(xx:xx:xx:xx:xx:xx) 或 6位纯数字
+    const isMacFormat = trimmedId.length === 17 && trimmedId.split(':').length === 6;
+    const is6DigitFormat = trimmedId.length === 6 && /^\d+$/.test(trimmedId);
+
+    if (!isMacFormat && !is6DigitFormat) {
+      return { 
+        valid: false, 
+        message: "设备ID格式错误（应为xx:xx:xx:xx:xx:xx或6位纯数字）" 
+      };
+    }
+
+    // 校验通过
+    return { valid: true, message: "" };
+  };
+
+  // 3. 绑定逻辑：增加格式校验 + 调用 API 绑定后重新刷新列表
   const handleBind = async () => {
+    // 先执行格式校验
+    const { valid, message } = validateJaboboId(inputUuid);
+    if (!valid) {
+      setValidateError(message);
+      return;
+    }
+    // 校验通过，清空错误提示
+    setValidateError('');
+
     const val = inputUuid.trim().toUpperCase();
-    if (!val) return;
     
     try {
       const res = await jaboboManager.bindJabobo(val); // 调用后端绑定接口
@@ -54,6 +89,14 @@ const JaboboSelector: React.FC<JaboboSelectorProps> = ({ onSelect, onNavigate })
       }
     } catch (err) {
       alert("网络错误，请重试");
+    }
+  };
+
+  // 新增：输入框变化时实时清除错误提示
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputUuid(e.target.value);
+    if (validateError) {
+      setValidateError('');
     }
   };
 
@@ -188,11 +231,20 @@ const JaboboSelector: React.FC<JaboboSelectorProps> = ({ onSelect, onNavigate })
                  <input 
                    autoFocus 
                    value={inputUuid} 
-                   onChange={(e) => setInputUuid(e.target.value)}
-                   className="w-full bg-white rounded-2xl px-6 py-4 font-bold text-gray-900 shadow-inner outline-none mb-4"
-                   placeholder="Enter UUID (e.g. JB-101)"
+                   onChange={handleInputChange} // 改用带错误清除的输入处理函数
+                   className={`w-full bg-white rounded-2xl px-6 py-4 font-bold text-gray-900 shadow-inner outline-none mb-2 ${
+                     validateError ? 'border-2 border-red-500' : ''
+                   }`}
+                   placeholder="Enter UUID (e.g. 00:11:22:33:44:55 or 123456)"
                  />
-                 <button onClick={handleBind} className="bg-gray-900 text-yellow-400 py-4 rounded-2xl font-black text-xs uppercase active:scale-95 transition-all">
+                 {/* 新增：校验错误提示 */}
+                 {validateError && (
+                   <p className="text-red-500 text-xs font-bold mb-4">{validateError}</p>
+                 )}
+                 <button 
+                   onClick={handleBind} 
+                   className="bg-gray-900 text-yellow-400 py-4 rounded-2xl font-black text-xs uppercase active:scale-95 transition-all"
+                 >
                    Confirm
                  </button>
               </div>
