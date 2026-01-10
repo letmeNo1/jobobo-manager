@@ -221,6 +221,35 @@
     "current": "current",
     "bytes": "bytes"
   },
+  
+  "settings": {
+    "button": {
+      "back": "Back",
+      "saveNewPassword": "Save New Password"
+    },
+    "title": {
+      "accountSettings": "Account Settings",
+      "changePassword": "Change Login Password"
+    },
+    "label": {
+      "account": "Account",
+      "newPassword": "New Password",
+      "confirmNewPassword": "Confirm New Password"
+    },
+    "placeholder": {
+      "newPassword": "Enter new password (at least 6 characters)",
+      "confirmPassword": "Re-enter to confirm"
+    },
+    "error": {
+      "passwordLength": "Password must be at least 6 characters long",
+      "passwordMismatch": "Passwords do not match",
+      "updateFailed": "Update failed"
+    },
+    "success": {
+      "passwordUpdated": "Password updated successfully!"
+    }
+  },
+
 
 
   "language": {

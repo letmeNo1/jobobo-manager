@@ -223,6 +223,34 @@
   },
 
 
+  "settings": {
+    "button": {
+      "back": "返回",
+      "saveNewPassword": "保存新密码"
+    },
+    "title": {
+      "accountSettings": "账户设置",
+      "changePassword": "修改登录密码"
+    },
+    "label": {
+      "account": "账户",
+      "newPassword": "新密码",
+      "confirmNewPassword": "确认新密码"
+    },
+    "placeholder": {
+      "newPassword": "输入 6 位以上新密码",
+      "confirmPassword": "再次输入以确认"
+    },
+    "error": {
+      "passwordLength": "密码长度至少需要 6 位",
+      "passwordMismatch": "两次输入的密码不一致",
+      "updateFailed": "更新失败"
+    },
+    "success": {
+      "passwordUpdated": "密码已成功更新！"
+    }
+  },
+
 
   "language": {
     "zh": "中文",

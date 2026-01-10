@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, Lock, Save, Loader2, User } from 'lucide-react';
+import { useTranslation } from 'react-i18next'; // 引入i18n钩子
 import { Screen } from '../types';
 import { userManagementApi } from '../api/user';
 
@@ -8,6 +9,9 @@ interface SettingsProps {
 }
 
 const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
+  // 获取i18n翻译函数
+  const { t } = useTranslation();
+  
   const [currentUser, setCurrentUser] = useState<{ username: string; role: string } | null>(null);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -24,12 +28,12 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
     if (!currentUser) return;
 
     if (newPassword.length < 6) {
-      setMessage({ type: 'error', text: '密码长度至少需要 6 位' });
+      setMessage({ type: 'error', text: t('settings.error.passwordLength') });
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setMessage({ type: 'error', text: '两次输入的密码不一致' });
+      setMessage({ type: 'error', text: t('settings.error.passwordMismatch') });
       return;
     }
 
@@ -44,12 +48,12 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
     });
 
       if (res.success) {
-        setMessage({ type: 'success', text: '密码已成功更新！' });
+        setMessage({ type: 'success', text: t('settings.success.passwordUpdated') });
         setNewPassword('');
         setConfirmPassword('');
       }
     } catch (err: any) {
-      setMessage({ type: 'error', text: err.message || '更新失败' });
+      setMessage({ type: 'error', text: err.message || t('settings.error.updateFailed') });
     } finally {
       setLoading(false);
     }
@@ -62,11 +66,12 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
         <button 
           onClick={() => onNavigate('DASHBOARD')}
           className="flex items-center text-gray-500 hover:text-gray-900 font-bold text-xs uppercase tracking-widest mb-8 transition-colors"
+          aria-label={t('settings.button.back')}
         >
-          <ChevronLeft size={16} className="mr-1" /> Back
+          <ChevronLeft size={16} className="mr-1" /> {t('settings.button.back')}
         </button>
 
-        <h1 className="text-2xl font-black text-gray-900 mb-8">账户设置</h1>
+        <h1 className="text-2xl font-black text-gray-900 mb-8">{t('settings.title.accountSettings')}</h1>
 
         {/* User Profile Card */}
         <div className="bg-white rounded-[32px] p-6 shadow-sm border border-gray-100 mb-6">
@@ -77,7 +82,7 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
             <div>
               <h2 className="text-xl font-black text-gray-800">{currentUser?.username}</h2>
               <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">
-                {currentUser?.role} Account
+                {currentUser?.role} {t('settings.label.account')}
               </span>
             </div>
           </div>
@@ -87,30 +92,34 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
         <div className="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100">
           <div className="flex items-center mb-6 text-gray-800">
             <Lock size={20} className="mr-2" />
-            <h3 className="font-bold">修改登录密码</h3>
+            <h3 className="font-bold">{t('settings.title.changePassword')}</h3>
           </div>
 
           <form onSubmit={handleUpdatePassword} className="space-y-4">
             <div>
-              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">新密码</label>
+              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">
+                {t('settings.label.newPassword')}
+              </label>
               <input 
                 type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 className="w-full bg-gray-50 border-none rounded-2xl px-5 py-4 text-sm font-bold focus:ring-2 focus:ring-yellow-400 transition-all"
-                placeholder="输入 6 位以上新密码"
+                placeholder={t('settings.placeholder.newPassword')}
                 required
               />
             </div>
 
             <div>
-              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">确认新密码</label>
+              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">
+                {t('settings.label.confirmNewPassword')}
+              </label>
               <input 
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className="w-full bg-gray-50 border-none rounded-2xl px-5 py-4 text-sm font-bold focus:ring-2 focus:ring-yellow-400 transition-all"
-                placeholder="再次输入以确认"
+                placeholder={t('settings.placeholder.confirmPassword')}
                 required
               />
             </div>
@@ -129,7 +138,7 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
               className="w-full bg-gray-900 text-yellow-400 py-4 rounded-2xl font-black text-sm mt-4 hover:shadow-lg active:scale-[0.98] transition-all flex items-center justify-center"
             >
               {loading ? <Loader2 className="animate-spin mr-2" size={18} /> : <Save className="mr-2" size={18} />}
-              保存新密码
+              {t('settings.button.saveNewPassword')}
             </button>
           </form>
         </div>
