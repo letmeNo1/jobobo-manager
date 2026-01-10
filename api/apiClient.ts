@@ -5,8 +5,6 @@ import axios from 'axios';
  * 所有的业务请求都应该基于这个实例发送
  */
 const apiClient = axios.create({
-  // 开发环境下建议直接写死后端地址，例如 'http://123.123.123.123:5000/api'
-  // 以防 import.meta.env 没生效导致请求发往了前端自己的 5173 端口
   baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
   timeout: 5000,
   headers: { 'Content-Type': 'application/json' }
@@ -30,14 +28,20 @@ apiClient.interceptors.request.use((config) => {
   return Promise.reject(error);
 });
 
-// --- 响应拦截器 ---
+// --- 响应拦截器（修复版）---
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    // 统一处理鉴权失败
+    // 1. 先判断是否是 401 错误
     if (error.response?.status === 401) {
-      localStorage.removeItem('user');
-      window.location.href = '/login';
+      // 2. 判断当前请求是否是登录接口（根据实际接口路径调整）
+      const isLoginRequest = error.config?.url?.includes('login');
+      
+      // 3. 只有非登录接口的 401 才执行登出跳转
+      if (!isLoginRequest) {
+        localStorage.removeItem('user');
+        window.location.href = '/app';
+      }
     }
     return Promise.reject(error);
   }

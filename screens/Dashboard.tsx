@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Waves, Book, UserCircle, Brain, RefreshCw, Plus, Settings2, Users, LogOut, Loader2, ChevronLeft, Cpu, X } from 'lucide-react';
 import Layout from '../components/Layout';
 import { Screen, Persona } from '../types';
@@ -31,6 +31,10 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [isSyncing, setIsSyncing] = useState(false);
   const [voiceStatus, setVoiceStatus] = useState('加载中...');
   const [kbStatus, setKbStatus] = useState('加载中...');
+  // 新增：编辑状态相关状态
+  const [editingPersonaId, setEditingPersonaId] = useState<string | null>(null);
+  const [tempPersonaName, setTempPersonaName] = useState('');
+  const nameInputRef = useRef<HTMLInputElement>(null);
 
   // 💡 当 jaboboId 变动时，必须重新抓取该设备的特定配置
   useEffect(() => {
@@ -42,6 +46,15 @@ const Dashboard: React.FC<DashboardProps> = ({
       onNavigate('LOGIN');
     }
   }, [jaboboId]); 
+
+  // 新增：编辑状态切换时自动聚焦输入框
+  useEffect(() => {
+    if (editingPersonaId && nameInputRef.current) {
+      nameInputRef.current.focus();
+      // 全选文本方便直接输入
+      nameInputRef.current.select();
+    }
+  }, [editingPersonaId]);
 
   const fetchServerConfig = async () => {
     try {
@@ -65,6 +78,30 @@ const Dashboard: React.FC<DashboardProps> = ({
         setKbStatus(res.data.kb_status || '已同步');
       }
     } catch (err) { console.error(err); }
+  };
+
+  // 新增：开始编辑人设名称
+  const startEditingPersonaName = (persona: Persona) => {
+    setEditingPersonaId(persona.id);
+    setTempPersonaName(persona.name);
+  };
+
+  // 新增：确认修改人设名称
+  const confirmPersonaNameChange = () => {
+    if (!editingPersonaId || !tempPersonaName.trim()) return;
+    
+    setPersonas(prev => prev.map(p => 
+      p.id === editingPersonaId 
+        ? { ...p, name: tempPersonaName.trim() } 
+        : p
+    ));
+    setEditingPersonaId(null);
+  };
+
+  // 新增：取消编辑人设名称
+  const cancelPersonaNameEdit = () => {
+    setEditingPersonaId(null);
+    setTempPersonaName('');
   };
 
   const handleSync = async () => {
@@ -145,14 +182,43 @@ const Dashboard: React.FC<DashboardProps> = ({
           <div className="flex space-x-2 overflow-x-auto pb-4 no-scrollbar">
             {personas.map((p) => (
               <div key={p.id} className="relative group flex-shrink-0 pt-1 pr-1">
-                <button
+                {/* 修改：添加双击事件，修改按钮内容支持编辑状态 */}
+                <div
                   onClick={() => setActivePersonaId(p.id)}
+                  onDoubleClick={() => startEditingPersonaName(p)}
                   className={`px-4 py-2 rounded-xl text-xs font-black transition-all border ${
                     activePersonaId === p.id ? 'bg-yellow-400 text-gray-900 border-yellow-400 shadow-md scale-105' : 'bg-gray-50 text-gray-400 border-gray-100'
                   }`}
                 >
-                  {p.name}
-                </button>
+                  {editingPersonaId === p.id ? (
+                    <div className="flex items-center justify-between w-[80px]">
+                      <input
+                        ref={nameInputRef}
+                        type="text"
+                        value={tempPersonaName}
+                        onChange={(e) => setTempPersonaName(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') confirmPersonaNameChange();
+                          if (e.key === 'Escape') cancelPersonaNameEdit();
+                        }}
+                        onBlur={confirmPersonaNameChange}
+                        className="w-full bg-transparent border-none outline-none text-xs font-black"
+                        placeholder="输入名称"
+                      />
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          cancelPersonaNameEdit();
+                        }}
+                        className="ml-1 text-gray-400 hover:text-gray-600"
+                      >
+                        <X size={10} strokeWidth={3} />
+                      </button>
+                    </div>
+                  ) : (
+                    <span>{p.name}</span>
+                  )}
+                </div>
                 {personas.length > 1 && (
                   <button
                     onClick={(e) => { e.stopPropagation(); if (window.confirm(`删除此人设?`)) onDeletePersona(p.id); }}
