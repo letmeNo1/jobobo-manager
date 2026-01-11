@@ -1,0 +1,5 @@
+{
+  "delete": "删除", 
+  "networkError": "网络异常，请检查网络连接",
+  "serverError": "服务器错误，请稍后重试"
+}

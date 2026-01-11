@@ -68,7 +68,9 @@
     "validate": {
       "empty": "Device ID cannot be empty",
       "formatError": "Device ID format error (should be xx:xx:xx:xx:xx:xx or 6-digit number)"
-    }
+    },
+    "invalidDeviceId": "Invalid device ID format (should be xx:xx:xx:xx:xx:xx or 6-digit number)",
+    
   },
    
   "dashboard": {
@@ -248,6 +250,10 @@
     "success": {
       "passwordUpdated": "Password updated successfully!"
     }
+  },
+    "common": {
+    "delete": "Delete",
+    "cancel": "Cancel"
   },
 
 

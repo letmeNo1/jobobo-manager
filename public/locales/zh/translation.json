@@ -68,7 +68,13 @@
     "validate": {
       "empty": "设备ID不能为空",
       "formatError": "设备ID格式错误（应为xx:xx:xx:xx:xx:xx或6位纯数字）"
-    }
+    },
+    "invalidDeviceId": "设备ID格式无效（应为xx:xx:xx:xx:xx:xx或6位纯数字）"
+  },
+    "common": {
+    "delete": "删除",    
+    "cancel": "取消",     
+    "logout": "退出登录"  
   },
    
 
