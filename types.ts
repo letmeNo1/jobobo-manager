@@ -61,7 +61,7 @@ export interface AudioFileInfo extends BackendFileInfo {
 export interface VoiceprintRegisterParams {
   jaboboId: string;
   voiceprintName: string; // 声纹名称
-  file: File; // 音频文件
+  filePath: string; // 音频文件
   xUsername: string; // 用户名（请求头）
   authorization: string; // Token（请求头）
 }

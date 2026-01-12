@@ -1,9 +1,7 @@
 import { ApiResponse, VoiceprintRegisterParams, VoiceprintRegisterResponse } from "@/types";
 import apiClient from "./apiClient";
 
-
 export const getRouteAuthParams = () => {
-  // 从localStorage获取基础认证参数（路由传递的核心）
   return {
     jaboboId: localStorage.getItem('jabobo_id') || '',
     xUsername: localStorage.getItem('username') || '',
@@ -13,33 +11,21 @@ export const getRouteAuthParams = () => {
 
 // 音频文件操作API
 export const JaboboVoice = {
-  /**
-   * 上传音频文件
-   * @param jaboboId 设备ID
-   * @param file 音频文件对象
-   * @param audioContent 音频文本内容（可选）
-   * @returns API响应结果
-   */
+  // 【保留原有方法不变】
   uploadAudio: async (
     jaboboId: string,
     file: File,
     audioContent?: string
   ): Promise<ApiResponse> => {
-    // 构建FormData（文件上传必须用FormData格式）
     const formData = new FormData();
     formData.append("jabobo_id", jaboboId);
     formData.append("file", file);
-    // 可选的音频文本内容
     if (audioContent) {
       formData.append("audio_content", audioContent);
     }
 
-    // 发送上传请求（注意设置Content-Type为multipart/form-data，axios会自动处理）
     const response = await apiClient.post('/user/upload-audio', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      },
-      // 可选：上传进度监控
+      headers: { 'Content-Type': 'multipart/form-data' },
       onUploadProgress: (progressEvent) => {
         const percentCompleted = Math.round(
           (progressEvent.loaded * 100) / (progressEvent.total || 1)
@@ -50,13 +36,6 @@ export const JaboboVoice = {
     return response.data;
   },
 
-  /**
-   * 查询指定设备的音频文件列表
-   * @param jaboboId 设备ID
-   * @param xUsername 用户名（请求头）
-   * @param authorization Token（请求头）
-   * @returns 音频文件列表响应
-   */
   listAudio: async (
     jaboboId: string,
     xUsername: string,
@@ -72,14 +51,6 @@ export const JaboboVoice = {
     return response.data;
   },
 
-  /**
-   * 删除指定的音频文件
-   * @param jaboboId 设备ID
-   * @param filePath 音频文件绝对路径
-   * @param xUsername 用户名（请求头）
-   * @param authorization Token（请求头）
-   * @returns 删除操作响应
-   */
   deleteAudio: async (
     jaboboId: string,
     filePath: string,
@@ -87,10 +58,7 @@ export const JaboboVoice = {
     authorization: string
   ): Promise<ApiResponse> => {
     const response = await apiClient.delete('/user/delete-audio', {
-      params: {
-        jabobo_id: jaboboId,
-        file_path: filePath
-      },
+      params: { jabobo_id: jaboboId, file_path: filePath },
       headers: {
         'X-Username': xUsername,
         'Authorization': authorization
@@ -99,49 +67,102 @@ export const JaboboVoice = {
     return response.data;
   },
 
-  /**
-   * 声纹注册接口（逻辑暂空）
-   * @param params 声纹注册参数（包含设备ID、声纹名称、音频文件、认证信息）
-   * @returns 声纹注册响应结果
-   */
+  // 【修正声纹注册方法：移除xUsername/authorization相关】
   registerVoiceprint: async (
-    params: VoiceprintRegisterParams
+    params: VoiceprintRegisterParams // 现在类型只包含3个字段
   ): Promise<ApiResponse<VoiceprintRegisterResponse>> => {
     try {
-      // 构建FormData（包含文件+普通参数）
-      const formData = new FormData();
-      formData.append("jabobo_id", params.jaboboId); // 设备ID
-      formData.append("voiceprint_name", params.voiceprintName); // 声纹名称
-      formData.append("file", params.file); // 音频文件
+      // 1. 校验核心参数
+      if (!params.jaboboId) {
+        throw new Error("捷宝宝设备ID不能为空");
+      }
+      if (!params.voiceprintName) {
+        throw new Error("声纹名称不能为空");
+      }
+      if (!params.filePath) {
+        throw new Error("音频文件路径不能为空");
+      }
 
-      // 发送声纹注册请求（后端逻辑暂空，仅返回成功响应）
-      const response = await apiClient.post('/user/register-voiceprint', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          'X-Username': params.xUsername, // 用户认证头
-          'Authorization': params.authorization // Token认证头
-        },
-        // 上传进度监控
+      // 2. 构建FormData（仅传递后端需要的3个参数）
+      const formData = new FormData();
+      formData.append("jabobo_id", params.jaboboId);
+      formData.append("voiceprint_name", params.voiceprintName);
+      formData.append("file_path", params.filePath);
+
+      // 3. 发送请求（移除多余的认证请求头）
+      const response = await apiClient.post('/voiceprint/register', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
         onUploadProgress: (progressEvent) => {
           const percentCompleted = Math.round(
             (progressEvent.loaded * 100) / (progressEvent.total || 1)
           );
-          console.log(`声纹注册文件上传进度：${percentCompleted}%`);
+          console.log(`声纹注册请求上传进度：${percentCompleted}%`);
         }
       });
 
       return response.data;
     } catch (error) {
-      // 统一异常处理
       console.error("声纹注册接口调用失败：", error);
+      const errorMsg = error instanceof Error 
+        ? error.message 
+        : "声纹注册请求失败，请检查网络或参数是否正确";
+      
       return {
         success: false,
-        message: "声纹注册请求失败，请检查网络或接口地址",
-        detail: error instanceof Error ? error.message : String(error)
+        message: errorMsg,
+        detail: error instanceof Error ? error.stack : String(error),
+        data: {} as VoiceprintRegisterResponse
       };
     }
   },
 
+  // 【扩展方法：声纹列表查询】
+  listVoiceprints: async (jaboboId: string): Promise<ApiResponse> => {
+    try {
+      if (!jaboboId) throw new Error("捷宝宝设备ID不能为空");
+      const response = await apiClient.get('/voiceprint/list', {
+        params: { jabobo_id: jaboboId }
+      });
+      return response.data;
+    } catch (error) {
+      console.error("查询声纹列表失败：", error);
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : "查询声纹列表失败",
+        detail: String(error)
+      };
+    }
+  },
+
+  // 【扩展方法：声纹删除】
+  deleteVoiceprint: async (
+    jaboboId: string,
+    voiceprintName: string
+  ): Promise<ApiResponse> => {
+    try {
+      if (!jaboboId) throw new Error("捷宝宝设备ID不能为空");
+      if (!voiceprintName) throw new Error("声纹名称不能为空");
+
+      const formData = new FormData();
+      formData.append("jabobo_id", jaboboId);
+      formData.append("voiceprint_name", voiceprintName);
+
+      const response = await apiClient.delete('/voiceprint/delete', {
+        data: formData,
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      return response.data;
+    } catch (error) {
+      console.error("删除声纹失败：", error);
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : "删除声纹失败",
+        detail: String(error)
+      };
+    }
+  },
+
+  // 【简化调用方法】
   listAudioWithRouteParams: async (): Promise<ApiResponse> => {
     const { jaboboId, xUsername, authorization } = getRouteAuthParams();
     return await JaboboVoice.listAudio(jaboboId, xUsername, authorization);
@@ -153,6 +174,19 @@ export const JaboboVoice = {
   uploadAudioWithRouteParams: async (file: File, audioContent?: string): Promise<ApiResponse> => {
     const { jaboboId } = getRouteAuthParams();
     return await JaboboVoice.uploadAudio(jaboboId, file, audioContent);
+  },
+  // 【修正简化版声纹注册：类型匹配】
+  registerVoiceprintWithRouteParams: async (
+    voiceprintName: string,
+    filePath: string
+  ): Promise<ApiResponse<VoiceprintRegisterResponse>> => {
+    const { jaboboId } = getRouteAuthParams();
+    // 现在参数完全匹配VoiceprintRegisterParams类型
+    return await JaboboVoice.registerVoiceprint({
+      jaboboId,
+      voiceprintName,
+      filePath
+    });
   }
 };
 
