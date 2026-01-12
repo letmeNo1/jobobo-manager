@@ -191,7 +191,7 @@
       "audioFileTooLarge": "音频文件过大（最大50MB）",
       "audioFileNotFound": "音频文件不存在",
       "loadRegisteredVoiceprintsFailed": "加载已注册声纹列表失败",
-      "deleteVoiceprintMissingParams": "删除失败：缺少必要的参数" // 新增：声纹删除参数缺失错误
+      "deleteVoiceprintMissingParams": "删除失败：缺少必要的参数"
     },
     "log": {
       "emptyJaboboId": "Jabobo ID为空，终止声纹请求",
@@ -211,7 +211,7 @@
     "unknownTime": "未知时间",
     "noAudioContent": "无音频文本内容",
     "noRegisteredVoiceprints": "暂无已注册声纹"
-  }
+  },
   "knowledgeBase": {
     "button": {
       "backToDashboard": "返回仪表盘",

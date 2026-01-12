@@ -30,6 +30,15 @@ interface RegisteredVoiceprint {
   // 可根据实际接口返回扩展字段
 }
 
+// 补充：声纹注册参数类型定义（和api中的VoiceprintRegisterParams保持一致）
+interface VoiceprintRegisterParams {
+  jaboboId: string;
+  voiceprintName: string;
+  filePath: string;
+  xUsername: string;
+  authorization: string;
+}
+
 // 组件Props
 interface VoiceprintProps {
   onNavigate: (screen: Screen) => void;
@@ -161,7 +170,7 @@ const Voiceprint: React.FC<VoiceprintProps> = ({ onNavigate, jaboboId }) => {
     fetchRegisteredVoiceprints();
   }, [jaboboId, t]);
 
-  // 声纹注册核心逻辑（原有逻辑，新增注册成功后刷新已注册列表）
+  // 声纹注册核心逻辑（修复类型错误）
   const handleRegisterVoiceprint = async () => {
     if (!jaboboId || typeof jaboboId !== 'string') {
       alert(t('voiceprint.error.emptyJaboboId') || '捷宝宝设备ID不能为空');
@@ -179,18 +188,27 @@ const Voiceprint: React.FC<VoiceprintProps> = ({ onNavigate, jaboboId }) => {
       return;
     }
 
+    // 关键修复：获取缺失的xUsername和authorization参数
+    const xUsername = localStorage.getItem("username") || "";
+    const authorization = localStorage.getItem("auth_token") || "";
+
     try {
       setIsRegistering(true);
       console.log(`[${t('voiceprint.log.registerStart') || '声纹注册'}] 开始注册声纹：`, {
         jaboboId,
         voiceprintName: voiceprintNameStr,
-        filePath: selectedChat
+        filePath: selectedChat,
+        xUsername,
+        authorization
       });
 
+      // 修复：补充完整的参数，匹配VoiceprintRegisterParams类型
       const response = await jaboboVoice.registerVoiceprint({
         jaboboId,
         voiceprintName: voiceprintNameStr,
-        filePath: selectedChat
+        filePath: selectedChat,
+        xUsername, // 新增
+        authorization // 新增
       });
 
       console.log(`[${t('voiceprint.log.registerResponse') || '声纹注册响应'}] 注册结果：`, response);
@@ -204,8 +222,6 @@ const Voiceprint: React.FC<VoiceprintProps> = ({ onNavigate, jaboboId }) => {
         setIsLoaded(false);
         
         // 新增：注册成功后刷新已注册声纹列表
-        const xUsername = localStorage.getItem("username") || "";
-        const authorization = localStorage.getItem("auth_token") || "";
         const reloadResponse = await jaboboVoice.listRegisteredVoiceprints(jaboboId, xUsername, authorization);
         if (reloadResponse.success && Array.isArray(reloadResponse.data)) {
           setRegisteredVoiceprints(reloadResponse.data);
@@ -558,4 +574,4 @@ const Voiceprint: React.FC<VoiceprintProps> = ({ onNavigate, jaboboId }) => {
   );
 };
 
-export default Voiceprint; 
+export default Voiceprint;
