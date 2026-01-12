@@ -40,7 +40,7 @@
       "privacyNote": "本产品仅面向家庭场景，不收集儿童生物特征用于商业用途。"
     }
   },
-    "login": {
+  "login": {
     "title": "捷宝宝",
     "subtitle": "管理系统",
     "usernameLabel": "账号",
@@ -56,7 +56,7 @@
   "jaboboSelector": {
     "title": "选择要管理的实体设备",
     "subtitle": "选择要管理的实体设备",
-    "deviceCardTitle": "Jabobo Unit",
+    "deviceCardTitle": "捷宝宝设备",
     "bindNewBtn": "绑定新实体",
     "bindTitle": "链接设备",
     "inputPlaceholder": "输入 UUID (例如 00:11:22:33:44:55 或 123456)",
@@ -71,13 +71,26 @@
     },
     "invalidDeviceId": "设备ID格式无效（应为xx:xx:xx:xx:xx:xx或6位纯数字）"
   },
-    "common": {
-    "delete": "删除",    
-    "cancel": "取消",     
-    "logout": "退出登录"  
+  "common": {
+    "delete": "删除",
+    "cancel": "取消",
+    "logout": "退出登录",
+    "save": "保存",
+    "confirm": "确认",
+    "loading": "加载中...",
+    "error": "错误",
+    "success": "成功",
+    "back": "返回",
+    "refresh": "刷新",
+    "search": "搜索",
+    "add": "添加",
+    "edit": "编辑",
+    "name": "名称",
+    "size": "大小",
+    "time": "时间",
+    "status": "状态",
+    "operation": "操作"
   },
-   
-
   "dashboard": {
     "loading": "加载中...",
     "ready": "已就绪",
@@ -108,38 +121,60 @@
     "signOut": "退出登录"
   },
   "voiceprint": {
+    "title": "声纹管理", 
     "backToDashboard": "返回仪表盘",
-    "description": "选择一段对话片段来训练Jabobo的语音识别模型。",
+    "description": "选择一段对话片段来训练捷宝宝的语音识别模型。",
     "label": {
       "selectSource": "选择对话来源",
       "audioContent": "音频内容",
-      "nameVoiceprint": "为该声纹命名"
+      "nameVoiceprint": "为该声纹命名",
+      "registeredVoiceprints": "已注册声纹",
+      "createTime": "创建时间",
+      "status": "状态",
+      "voiceprintName": "声纹名称",
+      "speakerId": "说话人ID",
+      "fileSize": "文件大小"
     },
     "placeholder": {
       "chooseChat": "选择最近的对话...",
-      "voiceprintExample": "例如：主人的声音"
+      "voiceprintExample": "例如：主人的声音",
+      "searchVoiceprint": "按名称搜索声纹..."
     },
     "loading": {
-      "audioList": "加载音频列表中..."
+      "audioList": "加载音频列表中...",
+      "voiceprintList": "加载声纹列表中..."
     },
     "processing": {
-      "audio": "正在处理音频..."
+      "audio": "正在处理音频...",
+      "registering": "正在注册声纹..."
     },
     "status": {
-      "audioLoaded": "音频已加载"
+      "audioLoaded": "音频已加载",
+      "valid": "正常",
+      "inactive": "异常", 
+      "registerSuccess": "声纹注册成功",
+      "deleteSuccess": "声纹删除成功"
     },
     "prompt": {
-      "selectFile": "选择一个文件..."
+      "selectFile": "选择一个文件...",
+      "voiceprintLimit": "每个设备最多支持10个声纹",
+      "duplicateName": "声纹名称已存在"
     },
     "button": {
       "deleteAudio": "删除当前音频",
-      "rememberVoiceprint": "记住该声纹"
+      "rememberVoiceprint": "记住该声纹",
+      "deleteVoiceprint": "删除声纹",
+      "refreshList": "刷新列表",
+      "registerNew": "注册新声纹"
     },
     "confirm": {
-      "deleteAudio": "确定要删除这个音频文件吗？删除后无法恢复！"
+      "deleteAudio": "确定要删除这个音频文件吗？删除后无法恢复！",
+      "deleteVoiceprint": "确定要删除该声纹吗？删除后无法恢复！"
     },
     "success": {
-      "deleteAudio": "音频文件删除成功！"
+      "deleteAudio": "音频文件删除成功！",
+      "registerVoiceprint": "声纹注册成功！",
+      "deleteVoiceprint": "声纹删除成功！"
     },
     "error": {
       "loadListFailed": "加载声纹列表失败",
@@ -147,24 +182,36 @@
       "deleteMissingParams": "删除失败：缺少必要的参数",
       "deleteFailed": "删除失败",
       "unknownError": "未知错误",
-      "deleteAudioFailed": "删除音频失败"
+      "deleteAudioFailed": "删除音频失败",
+      "registerFailed": "声纹注册失败",
+      "deleteVoiceprintFailed": "声纹删除失败",
+      "voiceprintLimitExceeded": "声纹数量已达上限（最多10个）",
+      "duplicateVoiceprintName": "声纹名称已存在，请更换名称",
+      "invalidAudioFormat": "不支持的音频格式（仅支持WAV）",
+      "audioFileTooLarge": "音频文件过大（最大50MB）",
+      "audioFileNotFound": "音频文件不存在",
+      "loadRegisteredVoiceprintsFailed": "加载已注册声纹列表失败",
+      "deleteVoiceprintMissingParams": "删除失败：缺少必要的参数" // 新增：声纹删除参数缺失错误
     },
     "log": {
-      "emptyJaboboId": "声纹请求",
-      "requestInfo": "声纹请求",
-      "response": "声纹请求",
-      "noAudioData": "声纹请求",
-      "fetchFailed": "声纹请求",
-      "deletingAudio": "删除音频",
-      "deleteResponse": "删除音频",
-      "refreshFailed": "刷新音频列表",
-      "deleteError": "删除音频"
+      "emptyJaboboId": "Jabobo ID为空，终止声纹请求",
+      "requestInfo": "声纹请求信息",
+      "response": "声纹请求响应",
+      "noAudioData": "未检测到音频数据，仅处理文本内容",
+      "fetchFailed": "获取声纹数据失败",
+      "deletingAudio": "删除音频文件",
+      "deleteResponse": "音频删除响应",
+      "refreshFailed": "刷新音频列表失败",
+      "deleteError": "删除音频文件出错",
+      "fetchRegisteredFailed": "获取已注册声纹列表失败",
+      "registeredVoiceprintsResponse": "已注册声纹列表返回",
+      "noRegisteredVoiceprints": "暂无已注册声纹"
     },
-    "emptyData": "空数据",
+    "emptyData": "暂无数据",
     "unknownTime": "未知时间",
-    "noAudioContent": "无音频文本内容"
-  },
-  
+    "noAudioContent": "无音频文本内容",
+    "noRegisteredVoiceprints": "暂无已注册声纹"
+  }
   "knowledgeBase": {
     "button": {
       "backToDashboard": "返回仪表盘",
@@ -227,8 +274,6 @@
     "current": "当前",
     "bytes": "字节"
   },
-
-
   "settings": {
     "button": {
       "back": "返回",
@@ -256,8 +301,6 @@
       "passwordUpdated": "密码已成功更新！"
     }
   },
-
-
   "language": {
     "zh": "中文",
     "en": "English"

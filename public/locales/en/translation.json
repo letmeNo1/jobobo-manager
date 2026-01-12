@@ -69,10 +69,8 @@
       "empty": "Device ID cannot be empty",
       "formatError": "Device ID format error (should be xx:xx:xx:xx:xx:xx or 6-digit number)"
     },
-    "invalidDeviceId": "Invalid device ID format (should be xx:xx:xx:xx:xx:xx or 6-digit number)",
-    
+    "invalidDeviceId": "Invalid device ID format (should be xx:xx:xx:xx:xx:xx or 6-digit number)"
   },
-   
   "dashboard": {
     "loading": "Loading...",
     "ready": "Ready",
@@ -102,40 +100,62 @@
     "adminPanel": "Admin Panel",
     "signOut": "Sign Out"
   },
-  
   "voiceprint": {
+    "title": "Voiceprint Management",
     "backToDashboard": "Back to Dashboard",
     "description": "Select a conversation segment to train Jabobo's voice recognition model.",
     "label": {
       "selectSource": "Select Conversation Source",
       "audioContent": "Audio Content",
-      "nameVoiceprint": "Name this Voiceprint"
+      "nameVoiceprint": "Name this Voiceprint",
+      "registeredVoiceprints": "Registered Voiceprints",
+      "createTime": "Create Time",
+      "status": "Status",
+      "voiceprintName": "Voiceprint Name",
+      "speakerId": "Speaker ID",
+      "fileSize": "File Size"
     },
     "placeholder": {
       "chooseChat": "Choose a recent chat...",
-      "voiceprintExample": "e.g., Master's Voice"
+      "voiceprintExample": "e.g., Master's Voice",
+      "searchVoiceprint": "Search voiceprint by name..."
     },
     "loading": {
-      "audioList": "Loading audio list..."
+      "audioList": "Loading audio list...",
+      "voiceprintList": "Loading voiceprint list..."
     },
     "processing": {
-      "audio": "Processing Audio..."
+      "audio": "Processing Audio...",
+      "registering": "Registering Voiceprint..."
     },
     "status": {
-      "audioLoaded": "Audio Loaded"
+      "inactive": "Inactive",
+      "audioLoaded": "Audio Loaded",
+      "valid": "Valid",
+      "invalid": "Invalid",
+      "registerSuccess": "Voiceprint registered successfully",
+      "deleteSuccess": "Voiceprint deleted successfully"
     },
     "prompt": {
-      "selectFile": "Select a file..."
+      "selectFile": "Select a file...",
+      "voiceprintLimit": "Maximum 10 voiceprints per device",
+      "duplicateName": "Voiceprint name already exists"
     },
     "button": {
       "deleteAudio": "Delete current audio",
-      "rememberVoiceprint": "Remember Voiceprint"
+      "rememberVoiceprint": "Remember Voiceprint",
+      "deleteVoiceprint": "Delete Voiceprint",
+      "refreshList": "Refresh List",
+      "registerNew": "Register New Voiceprint"
     },
     "confirm": {
-      "deleteAudio": "Are you sure to delete this audio file? It cannot be recovered after deletion!"
+      "deleteAudio": "Are you sure to delete this audio file? It cannot be recovered after deletion!",
+      "deleteVoiceprint": "Are you sure to delete this voiceprint? It cannot be recovered after deletion!"
     },
     "success": {
-      "deleteAudio": "Audio file deleted successfully!"
+      "deleteAudio": "Audio file deleted successfully!",
+      "registerVoiceprint": "Voiceprint registered successfully!",
+      "deleteVoiceprint": "Voiceprint deleted successfully!"
     },
     "error": {
       "loadListFailed": "Failed to load voiceprint list",
@@ -143,24 +163,36 @@
       "deleteMissingParams": "Deletion failed: Missing required parameters",
       "deleteFailed": "Deletion failed",
       "unknownError": "Unknown error",
-      "deleteAudioFailed": "Failed to delete audio"
+      "deleteAudioFailed": "Failed to delete audio",
+      "registerFailed": "Failed to register voiceprint",
+      "deleteVoiceprintFailed": "Failed to delete voiceprint",
+      "voiceprintLimitExceeded": "Voiceprint limit exceeded (max 10 per device)",
+      "duplicateVoiceprintName": "Voiceprint name already exists",
+      "invalidAudioFormat": "Invalid audio format (only WAV supported)",
+      "audioFileTooLarge": "Audio file too large (max 50MB)",
+      "audioFileNotFound": "Audio file not found",
+      "loadRegisteredVoiceprintsFailed": "Failed to load registered voiceprints",
+      "deleteVoiceprintMissingParams": "Deletion failed: Missing required parameters"
     },
     "log": {
-      "emptyJaboboId": "Voiceprint Request",
-      "requestInfo": "Voiceprint Request",
-      "response": "Voiceprint Request",
-      "noAudioData": "Voiceprint Request",
-      "fetchFailed": "Voiceprint Request",
-      "deletingAudio": "Delete Audio",
-      "deleteResponse": "Delete Audio",
-      "refreshFailed": "Refresh Audio List",
-      "deleteError": "Delete Audio"
+      "emptyJaboboId": "Jabobo ID is empty, aborting voiceprint request",
+      "requestInfo": "Voiceprint request information",
+      "response": "Voiceprint response received",
+      "noAudioData": "No audio data detected, processing text only",
+      "fetchFailed": "Failed to fetch voiceprint data",
+      "deletingAudio": "Deleting audio file",
+      "deleteResponse": "Audio deletion response received",
+      "refreshFailed": "Failed to refresh audio list",
+      "deleteError": "Error deleting audio file",
+      "fetchRegisteredFailed": "Failed to fetch registered voiceprint list",
+      "registeredVoiceprintsResponse": "Registered voiceprint list response",
+      "noRegisteredVoiceprints": "No registered voiceprints found"
     },
     "emptyData": "Empty data",
     "unknownTime": "Unknown time",
-    "noAudioContent": "No audio text content"
+    "noAudioContent": "No audio text content",
+    "noRegisteredVoiceprints": "No registered voiceprints yet"
   },
-  
   "knowledgeBase": {
     "button": {
       "backToDashboard": "Back to Dashboard",
@@ -223,7 +255,6 @@
     "current": "current",
     "bytes": "bytes"
   },
-  
   "settings": {
     "button": {
       "back": "Back",
@@ -251,13 +282,25 @@
       "passwordUpdated": "Password updated successfully!"
     }
   },
-    "common": {
+  "common": {
     "delete": "Delete",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "save": "Save",
+    "confirm": "Confirm",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "back": "Back",
+    "refresh": "Refresh",
+    "search": "Search",
+    "add": "Add",
+    "edit": "Edit",
+    "name": "Name",
+    "size": "Size",
+    "time": "Time",
+    "status": "Status",
+    "operation": "Operation"
   },
-
-
-
   "language": {
     "zh": "Chinese",
     "en": "English"
