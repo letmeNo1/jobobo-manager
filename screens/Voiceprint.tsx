@@ -20,17 +20,16 @@ interface AudioFile {
   upload_timestamp: number;
 }
 
-// 新增：已注册声纹数据类型
+// 🔥 修正：匹配后端实际返回的字段（speaker_id 替代 id）
 interface RegisteredVoiceprint {
-  id: string;
+  speaker_id: string; // 后端真实声纹ID字段
   voiceprint_name: string;
   create_time: string;
   status: string;
   jabobo_id: string;
-  // 可根据实际接口返回扩展字段
 }
 
-// 补充：声纹注册参数类型定义（和api中的VoiceprintRegisterParams保持一致）
+// 补充：声纹注册参数类型定义
 interface VoiceprintRegisterParams {
   jaboboId: string;
   voiceprintName: string;
@@ -56,7 +55,7 @@ const formatFileSize = (bytes: number) => {
 
 // 辅助函数：格式化时间
 const formatDateTime = (dateStr: string) => {
-  if (!dateStr) return '未知时间';
+  if (!dateStr) return '';
   try {
     return new Date(dateStr).toLocaleString('zh-CN', {
       year: 'numeric',
@@ -83,30 +82,23 @@ const Voiceprint: React.FC<VoiceprintProps> = ({ onNavigate, jaboboId }) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [voiceprintName, setVoiceprintName] = useState<string>('');
   const [isRegistering, setIsRegistering] = useState(false);
-  
-  // 新增：已注册声纹列表相关状态
   const [registeredVoiceprints, setRegisteredVoiceprints] = useState<RegisteredVoiceprint[]>([]);
   const [isLoadingVoiceprints, setIsLoadingVoiceprints] = useState(false);
-  const [deleteVoiceprintLoading, setDeleteVoiceprintLoading] = useState<string>(''); // 记录正在删除的声纹ID
+  const [deleteVoiceprintLoading, setDeleteVoiceprintLoading] = useState<string>('');
 
-  // 获取音频文件列表（原有逻辑）
+  // 获取音频文件列表
   useEffect(() => {
     const fetchVoiceprintList = async () => {
-      if (!jaboboId) {
-        console.log(`[${t('voiceprint.log.emptyJaboboId')}] jaboboId为空，终止请求`);
+      if (typeof jaboboId !== 'string' || jaboboId.trim() === '') {
+        console.log(`[日志] jaboboId为空，终止请求`);
         setIsLoading(false);
         return;
       }
 
-      const xUsername = localStorage.getItem("username") || "";
-      const authorization = localStorage.getItem("auth_token") || "";
-
-      console.log(`[${t('voiceprint.log.requestInfo')}] 参数信息：`, { jaboboId, xUsername, authorization });
-
       setIsLoading(true);
       try {
-        const response = await jaboboVoice.listAudio(jaboboId, xUsername, authorization);
-        console.log(`[${t('voiceprint.log.response')}] 接口返回：`, response);
+        const response = await jaboboVoice.listAudio(jaboboId);
+        console.log(`[日志] 音频列表返回：`, response);
 
         if (response.success && response.audio_list && Array.isArray(response.audio_list)) {
           setAudioList(response.audio_list);
@@ -114,19 +106,19 @@ const Voiceprint: React.FC<VoiceprintProps> = ({ onNavigate, jaboboId }) => {
             id: item.file_path,
             title: `${item.upload_time.split(' ')[0]}: ${item.file_name}`,
             duration: '0:00',
-            date: item.upload_time.split(' ')[0] || t('voiceprint.unknownTime')
+            date: item.upload_time.split(' ')[0] || ''
           }));
           setMOCK_CHATS(realData);
         } else {
           setMOCK_CHATS([]);
           setAudioList([]);
-          console.warn(`[${t('voiceprint.log.noAudioData')}]`, response.message || response.detail || t('voiceprint.emptyData'));
+          console.warn(`[日志] 无音频数据`, response.message || response.detail);
         }
       } catch (error) {
-        console.error(`[${t('voiceprint.log.fetchFailed')}] 获取列表失败：`, error);
+        console.error(`[日志] 获取音频列表失败：`, error);
         setMOCK_CHATS([]);
         setAudioList([]);
-        alert(`${t('voiceprint.error.loadListFailed')}: ${(error as Error).message || t('voiceprint.error.networkError')}`);
+        alert(`${t('voiceprint.error.loadListFailed')}: ${(error as Error).message}`);
       } finally {
         setIsLoading(false);
       }
@@ -135,33 +127,31 @@ const Voiceprint: React.FC<VoiceprintProps> = ({ onNavigate, jaboboId }) => {
     fetchVoiceprintList();
   }, [jaboboId, t]);
 
-  // 新增：获取已注册的声纹列表
+  // 获取已注册的声纹列表
   useEffect(() => {
     const fetchRegisteredVoiceprints = async () => {
-      if (!jaboboId) {
-        console.log(`[${t('voiceprint.log.emptyJaboboId')}] jaboboId为空，终止获取已注册声纹请求`);
+      if (typeof jaboboId !== 'string' || jaboboId.trim() === '') {
+        console.log(`[日志] jaboboId为空，终止获取已注册声纹请求`);
         return;
       }
 
-      const xUsername = localStorage.getItem("username") || "";
-      const authorization = localStorage.getItem("auth_token") || "";
-
       setIsLoadingVoiceprints(true);
       try {
-        // 调用获取已注册声纹列表的接口（请根据实际接口调整）
-        const response = await jaboboVoice.listRegisteredVoiceprints(jaboboId, xUsername, authorization);
-        console.log(`[${t('voiceprint.log.registeredVoiceprintsResponse')}] 已注册声纹列表返回：`, response);
+        const response = await jaboboVoice.listRegisteredVoiceprints(jaboboId);
+        console.log("【后端原始声纹数据】:", response.data);
+
+        console.log(`[日志] 已注册声纹列表返回：`, response);
 
         if (response.success && Array.isArray(response.data)) {
           setRegisteredVoiceprints(response.data);
         } else {
           setRegisteredVoiceprints([]);
-          console.warn(`[${t('voiceprint.log.noRegisteredVoiceprints')}]`, response.message || '无已注册声纹');
+          console.warn(`[日志] 无已注册声纹`, response.message);
         }
       } catch (error) {
-        console.error(`[${t('voiceprint.log.fetchRegisteredFailed')}] 获取已注册声纹列表失败：`, error);
+        console.error(`[日志] 获取已注册声纹列表失败：`, error);
         setRegisteredVoiceprints([]);
-        alert(`${t('voiceprint.error.loadRegisteredVoiceprintsFailed')}: ${(error as Error).message || t('voiceprint.error.networkError')}`);
+        alert(`${t('voiceprint.error.loadRegisteredVoiceprintsFailed')}: ${(error as Error).message}`);
       } finally {
         setIsLoadingVoiceprints(false);
       }
@@ -170,116 +160,130 @@ const Voiceprint: React.FC<VoiceprintProps> = ({ onNavigate, jaboboId }) => {
     fetchRegisteredVoiceprints();
   }, [jaboboId, t]);
 
-  // 声纹注册核心逻辑（修复类型错误）
+  // 声纹注册核心逻辑（无修改）
   const handleRegisterVoiceprint = async () => {
-    if (!jaboboId || typeof jaboboId !== 'string') {
-      alert(t('voiceprint.error.emptyJaboboId') || '捷宝宝设备ID不能为空');
+    const validJaboboId = typeof jaboboId === 'string' && jaboboId.trim() !== '';
+    const voiceprintNameStr = typeof voiceprintName === 'string' ? voiceprintName.trim() : '';
+    const validSelectedChat = typeof selectedChat === 'string' && selectedChat.trim() !== '';
+    
+    if (!validJaboboId) {
+      alert(t('voiceprint.error.emptyJaboboId'));
       return;
     }
     
-    const voiceprintNameStr = voiceprintName.trim();
     if (!voiceprintNameStr) {
-      alert(t('voiceprint.error.emptyVoiceprintName') || '请输入声纹名称');
+      alert(t('voiceprint.error.emptyVoiceprintName'));
       return;
     }
     
-    if (!selectedChat || typeof selectedChat !== 'string') {
-      alert(t('voiceprint.error.noAudioSelected') || '请先选择音频文件');
+    if (!validSelectedChat) {
+      alert(t('voiceprint.error.noAudioSelected'));
       return;
     }
-
-    // 关键修复：获取缺失的xUsername和authorization参数
-    const xUsername = localStorage.getItem("username") || "";
-    const authorization = localStorage.getItem("auth_token") || "";
 
     try {
       setIsRegistering(true);
-      console.log(`[${t('voiceprint.log.registerStart') || '声纹注册'}] 开始注册声纹：`, {
+      console.log(`[日志] 开始注册声纹：`, {
         jaboboId,
         voiceprintName: voiceprintNameStr,
-        filePath: selectedChat,
-        xUsername,
-        authorization
+        filePath: selectedChat
       });
 
-      // 修复：补充完整的参数，匹配VoiceprintRegisterParams类型
       const response = await jaboboVoice.registerVoiceprint({
         jaboboId,
         voiceprintName: voiceprintNameStr,
-        filePath: selectedChat,
-        xUsername, // 新增
-        authorization // 新增
+        filePath: selectedChat
       });
 
-      console.log(`[${t('voiceprint.log.registerResponse') || '声纹注册响应'}] 注册结果：`, response);
+      console.log(`[日志] 注册结果：`, response);
 
       if (response && response.success) {
-        alert(`${t('voiceprint.success.registerVoiceprint') || '声纹注册成功'}：${voiceprintNameStr}`);
-        // 重置状态
+        alert(`${t('voiceprint.success.registerVoiceprint')}：${voiceprintNameStr}`);
         setVoiceprintName('');
         setSelectedChat('');
         setSelectedAudioContent('');
         setIsLoaded(false);
         
-        // 新增：注册成功后刷新已注册声纹列表
-        const reloadResponse = await jaboboVoice.listRegisteredVoiceprints(jaboboId, xUsername, authorization);
+        const reloadResponse = await jaboboVoice.listRegisteredVoiceprints(jaboboId);
         if (reloadResponse.success && Array.isArray(reloadResponse.data)) {
           setRegisteredVoiceprints(reloadResponse.data);
         }
         
         onNavigate('DASHBOARD');
       } else {
-        alert(`${t('voiceprint.error.registerFailed') || '声纹注册失败'}：${response?.message || response?.detail || '未知错误'}`);
+        alert(`${t('voiceprint.error.registerFailed')}：${response?.message || response?.detail}`);
       }
     } catch (error) {
-      console.error(`[${t('voiceprint.log.registerError') || '声纹注册错误'}] 注册失败：`, error);
-      alert(`${t('voiceprint.error.registerVoiceprintFailed') || '声纹注册请求失败'}: ${(error as Error).message || '网络错误'}`);
+      console.error(`[日志] 注册失败：`, error);
+      alert(`${t('voiceprint.error.registerVoiceprintFailed')}: ${(error as Error).message}`);
     } finally {
       setIsRegistering(false);
     }
   };
 
-  // 新增：删除已注册的声纹
-  const handleDeleteRegisteredVoiceprint = async (voiceprintId: string) => {
-    if (!window.confirm(t('voiceprint.confirm.deleteVoiceprint') || '确定要删除该声纹吗？删除后将无法恢复！')) {
+  // 🔥 核心修复1：删除函数接收2个参数（speakerId + voiceprintName）
+  const handleDeleteRegisteredVoiceprint = async (speakerId: string, voiceprintName: string) => {
+    if (!window.confirm(t('voiceprint.confirm.deleteVoiceprint'))) {
       return;
     }
 
-    if (!jaboboId || !voiceprintId) {
-      alert(t('voiceprint.error.deleteVoiceprintMissingParams') || '删除失败：缺少必要参数');
+    // 精准打印所有参数状态
+    console.log('========== 删除声纹参数排查 ==========');
+    console.log('jaboboId (props传入):', {
+      value: jaboboId,
+      type: typeof jaboboId,
+      isEmpty: !jaboboId,
+      isBlank: typeof jaboboId === 'string' && jaboboId.trim() === ''
+    });
+    console.log('speakerId (点击传入):', {
+      value: speakerId,
+      type: typeof speakerId,
+      isEmpty: !speakerId,
+      isBlank: typeof speakerId === 'string' && speakerId.trim() === ''
+    });
+    console.log('voiceprintName (点击传入):', {
+      value: voiceprintName,
+      type: typeof voiceprintName,
+      isEmpty: !voiceprintName,
+      isBlank: typeof voiceprintName === 'string' && voiceprintName.trim() === ''
+    });
+    console.log('======================================');
+
+    // 安全校验：3个参数都非空
+    const isJaboboIdValid = typeof jaboboId === 'string' && jaboboId.trim() !== '';
+    const isSpeakerIdValid = typeof speakerId === 'string' && speakerId.trim() !== '';
+    const isVoiceprintNameValid = typeof voiceprintName === 'string' && voiceprintName.trim() !== '';
+    
+    if (!isJaboboIdValid || !isSpeakerIdValid || !isVoiceprintNameValid) {
+      alert(t('voiceprint.error.deleteVoiceprintMissingParams'));
       return;
     }
-
-    const xUsername = localStorage.getItem("username") || "";
-    const authorization = localStorage.getItem("auth_token") || "";
 
     try {
-      setDeleteVoiceprintLoading(voiceprintId);
-      console.log(`[${t('voiceprint.log.deletingVoiceprint') || '删除声纹'}] 开始删除声纹: ${voiceprintId}`);
+      setDeleteVoiceprintLoading(speakerId);
+      console.log(`[日志] 开始删除声纹: speakerId=${speakerId}, voiceprintName=${voiceprintName}`);
       
-      // 调用删除声纹接口（请根据实际接口调整）
+      // 🔥 核心修复2：调用接口时传递3个参数
       const response = await jaboboVoice.deleteRegisteredVoiceprint(
-        jaboboId,
-        voiceprintId,
-        xUsername,
-        authorization
+        jaboboId,          // 设备ID
+        speakerId,         // 声纹ID（speaker_id）
+        voiceprintName     // 声纹名称
       );
       
-      console.log(`[${t('voiceprint.log.deleteVoiceprintResponse') || '删除声纹响应'}] 接口返回：`, response);
+      console.log(`[日志] 删除声纹响应：`, response);
       
       if (response.success) {
-        alert(t('voiceprint.success.deleteVoiceprint') || '声纹删除成功');
-        // 刷新声纹列表
-        const reloadResponse = await jaboboVoice.listRegisteredVoiceprints(jaboboId, xUsername, authorization);
+        alert(t('voiceprint.success.deleteVoiceprint'));
+        const reloadResponse = await jaboboVoice.listRegisteredVoiceprints(jaboboId);
         if (reloadResponse.success && Array.isArray(reloadResponse.data)) {
           setRegisteredVoiceprints(reloadResponse.data);
         }
       } else {
-        alert(`${t('voiceprint.error.deleteVoiceprintFailed') || '删除失败'}：${response.message || response.detail || '未知错误'}`);
+        alert(`${t('voiceprint.error.deleteVoiceprintFailed')}：${response.message || response.detail}`);
       }
     } catch (error) {
-      console.error(`[${t('voiceprint.log.deleteVoiceprintError') || '删除声纹错误'}] 失败：`, error);
-      alert(`${t('voiceprint.error.deleteVoiceprintRequestFailed') || '声纹删除失败'}: ${(error as Error).message || '网络错误'}`);
+      console.error(`[日志] 删除声纹失败：`, error);
+      alert(`${t('voiceprint.error.deleteVoiceprintRequestFailed')}: ${(error as Error).message}`);
     } finally {
       setDeleteVoiceprintLoading('');
     }
@@ -290,42 +294,39 @@ const Voiceprint: React.FC<VoiceprintProps> = ({ onNavigate, jaboboId }) => {
     setVoiceprintName(inputValue);
   };
 
+  // 音频删除逻辑（无修改）
   const handleDeleteSelectedAudio = async () => {
-    if (!window.confirm(t('voiceprint.confirm.deleteAudio') || '确定要删除该音频文件吗？')) {
+    if (!window.confirm(t('voiceprint.confirm.deleteAudio'))) {
       return;
     }
 
-    if (!jaboboId || !selectedChat) {
-      alert(t('voiceprint.error.deleteMissingParams') || '删除失败：缺少必要参数');
+    const isJaboboIdValid = typeof jaboboId === 'string' && jaboboId.trim() !== '';
+    const isSelectedChatValid = typeof selectedChat === 'string' && selectedChat.trim() !== '';
+    
+    if (!isJaboboIdValid || !isSelectedChatValid) {
+      alert(t('voiceprint.error.deleteMissingParams'));
       return;
     }
-
-    const xUsername = localStorage.getItem("username") || "";
-    const authorization = localStorage.getItem("auth_token") || "";
 
     try {
       setIsDeleting(true);
-      console.log(`[${t('voiceprint.log.deletingAudio') || '删除音频'}] 开始删除文件: ${selectedChat}`);
+      console.log(`[日志] 开始删除文件: ${selectedChat}`);
       
       const response = await jaboboVoice.deleteAudio(
         jaboboId,
-        selectedChat,
-        xUsername,
-        authorization
+        selectedChat
       );
       
-      console.log(`[${t('voiceprint.log.deleteResponse') || '删除响应'}] 接口返回：`, response);
+      console.log(`[日志] 删除音频响应：`, response);
       
       if (response.success) {
-        alert(t('voiceprint.success.deleteAudio') || '音频文件删除成功');
+        alert(t('voiceprint.success.deleteAudio'));
         
         setSelectedChat('');
         setSelectedAudioContent('');
         setIsLoaded(false);
         
-        const xUsernameReload = localStorage.getItem("username") || "";
-        const authorizationReload = localStorage.getItem("auth_token") || "";
-        const reloadResponse = await jaboboVoice.listAudio(jaboboId, xUsernameReload, authorizationReload);
+        const reloadResponse = await jaboboVoice.listAudio(jaboboId);
         
         if (reloadResponse.success) {
           if (reloadResponse.audio_list && Array.isArray(reloadResponse.audio_list)) {
@@ -334,7 +335,7 @@ const Voiceprint: React.FC<VoiceprintProps> = ({ onNavigate, jaboboId }) => {
               id: item.file_path,
               title: `${item.upload_time.split(' ')[0]}: ${item.file_name}`,
               duration: '0:00',
-              date: item.upload_time.split(' ')[0] || t('voiceprint.unknownTime')
+              date: item.upload_time.split(' ')[0] || ''
             }));
             setMOCK_CHATS(newChats);
           } else {
@@ -344,14 +345,14 @@ const Voiceprint: React.FC<VoiceprintProps> = ({ onNavigate, jaboboId }) => {
         } else {
           setMOCK_CHATS([]);
           setAudioList([]);
-          console.warn(`[${t('voiceprint.log.refreshFailed') || '刷新失败'}] 接口返回失败：`, reloadResponse.message || reloadResponse.detail);
+          console.warn(`[日志] 刷新音频列表失败：`, reloadResponse.message || reloadResponse.detail);
         }
       } else {
-        alert(`${t('voiceprint.error.deleteFailed') || '删除失败'}：${response.message || response.detail || '未知错误'}`);
+        alert(`${t('voiceprint.error.deleteFailed')}：${response.message || response.detail}`);
       }
     } catch (error) {
-      console.error(`[${t('voiceprint.log.deleteError') || '删除错误'}] 失败：`, error);
-      alert(`${t('voiceprint.error.deleteAudioFailed') || '音频删除失败'}: ${(error as Error).message || '网络错误'}`);
+      console.error(`[日志] 删除音频失败：`, error);
+      alert(`${t('voiceprint.error.deleteAudioFailed')}: ${(error as Error).message}`);
     } finally {
       setIsDeleting(false);
     }
@@ -363,7 +364,7 @@ const Voiceprint: React.FC<VoiceprintProps> = ({ onNavigate, jaboboId }) => {
     
     if (val) {
       const selectedAudio = audioList.find(item => item.file_path === val);
-      setSelectedAudioContent(selectedAudio?.audio_content || t('voiceprint.noAudioContent') || '无音频内容');
+      setSelectedAudioContent(selectedAudio?.audio_content || '');
       
       setIsProcessing(true);
       setIsLoaded(false);
@@ -377,13 +378,14 @@ const Voiceprint: React.FC<VoiceprintProps> = ({ onNavigate, jaboboId }) => {
     }
   };
 
+  // 🔥 核心修复3：渲染时传递 speaker_id 和 voiceprint_name
   return (
     <Layout className="bg-white">
       <div className="p-6">
         <button 
           onClick={() => onNavigate('DASHBOARD')} 
           className="mb-6 p-2 bg-gray-50 rounded-full text-gray-600"
-          aria-label={t('voiceprint.backToDashboard') || '返回仪表盘'}
+          aria-label={t('voiceprint.backToDashboard')}
         >
           <ArrowLeft size={20} />
         </button>
@@ -392,15 +394,15 @@ const Voiceprint: React.FC<VoiceprintProps> = ({ onNavigate, jaboboId }) => {
           <div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mb-4">
             <UserPlus size={32} />
           </div>
-          <h2 className="text-xl font-bold text-gray-800 mb-2">{t('voiceprint.title') || '声纹注册'}</h2>
+          <h2 className="text-xl font-bold text-gray-800 mb-2">{t('voiceprint.title')}</h2>
           <p className="text-center text-sm text-gray-500 px-6">
-            {t('voiceprint.description') || '选择音频文件并命名声纹，完成声纹注册'}
+            {t('voiceprint.description')}
           </p>
         </div>
 
-        {/* 音频文件选择区域（原有） */}
+        {/* 音频文件选择区域 */}
         <div className="mb-8">
-          <label className="block text-gray-700 font-bold text-sm mb-2">{t('voiceprint.label.selectSource') || '选择音频源'}</label>
+          <label className="block text-gray-700 font-bold text-sm mb-2">{t('voiceprint.label.selectSource')}</label>
           <div className="relative">
             <select 
               className="w-full bg-gray-50 border border-gray-100 rounded-xl py-4 px-4 appearance-none text-gray-700 focus:outline-none focus:ring-2 focus:ring-yellow-400"
@@ -408,9 +410,9 @@ const Voiceprint: React.FC<VoiceprintProps> = ({ onNavigate, jaboboId }) => {
               onChange={handleChatSelect}
               disabled={isLoading || isRegistering}
             >
-              <option value="">{t('voiceprint.placeholder.chooseChat') || '选择音频文件'}</option>
+              <option value="">{t('voiceprint.placeholder.chooseChat')}</option>
               {isLoading ? (
-                <option value="" disabled>{t('voiceprint.loading.audioList') || '加载音频列表中...'}</option>
+                <option value="" disabled>{t('voiceprint.loading.audioList')}</option>
               ) : (
                 MOCK_CHATS.map(chat => {
                   const audioItem = audioList.find(item => item.file_path === chat.id);
@@ -437,7 +439,7 @@ const Voiceprint: React.FC<VoiceprintProps> = ({ onNavigate, jaboboId }) => {
                     <div key={i} className={`w-1 h-6 bg-yellow-400 rounded-full animate-bounce`} style={{ animationDelay: `${i * 0.1}s` }}></div>
                   ))}
                 </div>
-                <span className="text-xs text-gray-400 font-medium">{t('voiceprint.processing.audio') || '处理音频中...'}</span>
+                <span className="text-xs text-gray-400 font-medium">{t('voiceprint.processing.audio')}</span>
               </div>
             ) : isLoaded ? (
               <div className="flex flex-col items-center w-full">
@@ -446,16 +448,16 @@ const Voiceprint: React.FC<VoiceprintProps> = ({ onNavigate, jaboboId }) => {
                     <div key={i} className={`w-1 bg-yellow-400 rounded-full h-${h === 1 ? '2' : h === 2 ? '4' : h === 3 ? '6' : h === 4 ? '8' : '10'}`}></div>
                   ))}
                 </div>
-                <span className="text-xs text-gray-600 font-bold mb-3">{t('voiceprint.status.audioLoaded') || '音频加载完成'}</span>
+                <span className="text-xs text-gray-600 font-bold mb-3">{t('voiceprint.status.audioLoaded')}</span>
                 
                 <div className="w-full bg-white rounded-xl p-3 border border-gray-200 mt-2">
                   <div className="flex justify-between items-start mb-1">
-                    <h4 className="text-xs font-bold text-gray-700">{t('voiceprint.label.audioContent') || '音频内容'}</h4>
+                    <h4 className="text-xs font-bold text-gray-700">{t('voiceprint.label.audioContent')}</h4>
                     <button
                       onClick={handleDeleteSelectedAudio}
                       disabled={isDeleting || isRegistering}
                       className="p-1 text-red-500 hover:bg-red-50 rounded-full transition-colors"
-                      aria-label={t('voiceprint.button.deleteAudio') || '删除音频'}
+                      aria-label={t('voiceprint.button.deleteAudio')}
                     >
                       {isDeleting ? (
                         <div className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
@@ -465,14 +467,14 @@ const Voiceprint: React.FC<VoiceprintProps> = ({ onNavigate, jaboboId }) => {
                     </button>
                   </div>
                   <p className="text-sm text-gray-600 whitespace-pre-wrap break-words">
-                    {selectedAudioContent || t('voiceprint.noAudioContent') || '无音频内容'}
+                    {selectedAudioContent || ''}
                   </p>
                 </div>
               </div>
             ) : (
               <div className="flex flex-col items-center text-gray-300">
                 <Mic2 size={32} className="mb-2" />
-                <span className="text-xs">{t('voiceprint.prompt.selectFile') || '请选择音频文件'}</span>
+                <span className="text-xs">{t('voiceprint.prompt.selectFile')}</span>
               </div>
             )}
           </div>
@@ -481,8 +483,8 @@ const Voiceprint: React.FC<VoiceprintProps> = ({ onNavigate, jaboboId }) => {
         {isLoaded && (
           <div className="animate-in fade-in duration-500 mb-12">
             <Input 
-              label={t('voiceprint.label.nameVoiceprint') || '命名声纹'} 
-              placeholder={t('voiceprint.placeholder.voiceprintExample') || '例如：爸爸、妈妈'} 
+              label={t('voiceprint.label.nameVoiceprint')} 
+              placeholder={t('voiceprint.placeholder.voiceprintExample')} 
               value={voiceprintName}
               onChange={handleVoiceprintNameChange}
               disabled={isRegistering}
@@ -501,22 +503,22 @@ const Voiceprint: React.FC<VoiceprintProps> = ({ onNavigate, jaboboId }) => {
               {isRegistering ? (
                 <>
                   <Loader2 size={20} className="mr-2 animate-spin" />
-                  <span>{t('voiceprint.button.registering') || '正在注册...'}</span>
+                  <span>{t('voiceprint.button.registering')}</span>
                 </>
               ) : (
                 <>
                   <Mic2 size={20} className="mr-2" />
-                  <span>{t('voiceprint.button.rememberVoiceprint') || '记住声纹'}</span>
+                  <span>{t('voiceprint.button.rememberVoiceprint')}</span>
                 </>
               )}
             </button>
           </div>
         )}
 
-        {/* 新增：已注册声纹列表区域 */}
+        {/* 已注册声纹列表区域 */}
         <div className="mt-10 border-t border-gray-100 pt-8">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold text-gray-800">{t('voiceprint.label.registeredVoiceprints') || '已注册的声纹'}</h3>
+            <h3 className="text-lg font-bold text-gray-800">{t('voiceprint.label.registeredVoiceprints')}</h3>
             {isLoadingVoiceprints && (
               <Loader2 size={16} className="text-gray-400 animate-spin" />
             )}
@@ -525,18 +527,19 @@ const Voiceprint: React.FC<VoiceprintProps> = ({ onNavigate, jaboboId }) => {
           {isLoadingVoiceprints ? (
             <div className="py-8 flex flex-col items-center justify-center text-gray-400">
               <Loader2 size={24} className="mb-2 animate-spin" />
-              <p className="text-sm">{t('voiceprint.loading.registeredVoiceprints') || '加载已注册声纹列表中...'}</p>
+              <p className="text-sm">{t('voiceprint.loading.registeredVoiceprints')}</p>
             </div>
           ) : registeredVoiceprints.length === 0 ? (
             <div className="py-8 flex flex-col items-center justify-center bg-gray-50 rounded-xl border border-dashed border-gray-200">
               <XCircle size={32} className="text-gray-300 mb-2" />
-              <p className="text-sm text-gray-500">{t('voiceprint.prompt.noRegisteredVoiceprints') || '暂无已注册的声纹'}</p>
+              <p className="text-sm text-gray-500">{t('voiceprint.prompt.noRegisteredVoiceprints')}</p>
             </div>
           ) : (
             <div className="space-y-3 max-h-80 overflow-y-auto pr-2">
               {registeredVoiceprints.map((voiceprint) => (
+                // 🔥 修复：key 改为 speaker_id（唯一标识）
                 <div 
-                  key={voiceprint.id} 
+                  key={voiceprint.speaker_id} 
                   className="bg-gray-50 rounded-xl p-4 border border-gray-100 hover:border-gray-200 transition-colors"
                 >
                   <div className="flex items-start justify-between">
@@ -546,18 +549,22 @@ const Voiceprint: React.FC<VoiceprintProps> = ({ onNavigate, jaboboId }) => {
                         <CheckCircle2 size={14} className="text-green-500 ml-2" />
                       </div>
                       <div className="flex items-center text-xs text-gray-500 space-x-4">
-                        <span>{t('voiceprint.label.createTime') || '创建时间'}: {formatDateTime(voiceprint.create_time)}</span>
-                        <span>{t('voiceprint.label.status') || '状态'}: {voiceprint.status === 'active' ? t('voiceprint.status.active') || '正常' : t('voiceprint.status.inactive') || '异常'}</span>
+                        <span>{t('voiceprint.label.createTime')}: {formatDateTime(voiceprint.create_time)}</span>
+                        <span>{t('voiceprint.label.status')}: {voiceprint.status === 'active' ? t('voiceprint.status.active') : t('voiceprint.status.inactive')}</span>
                       </div>
                     </div>
                     
+                    {/* 🔥 修复：传递 speaker_id 和 voiceprint_name 两个参数 */}
                     <button
-                      onClick={() => handleDeleteRegisteredVoiceprint(voiceprint.id)}
-                      disabled={deleteVoiceprintLoading === voiceprint.id || isRegistering}
+                      onClick={() => handleDeleteRegisteredVoiceprint(
+                        voiceprint.speaker_id,
+                        voiceprint.voiceprint_name
+                      )}
+                      disabled={deleteVoiceprintLoading === voiceprint.speaker_id || isRegistering}
                       className="p-1.5 text-red-400 hover:bg-red-50 rounded-full transition-colors ml-2"
-                      aria-label={t('voiceprint.button.deleteVoiceprint') || '删除声纹'}
+                      aria-label={t('voiceprint.button.deleteVoiceprint')}
                     >
-                      {deleteVoiceprintLoading === voiceprint.id ? (
+                      {deleteVoiceprintLoading === voiceprint.speaker_id ? (
                         <div className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
                       ) : (
                         <Trash2 size={16} />
