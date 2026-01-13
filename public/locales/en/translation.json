@@ -139,7 +139,9 @@
     "prompt": {
       "selectFile": "Select a file...",
       "voiceprintLimit": "Maximum 10 voiceprints per device",
-      "duplicateName": "Voiceprint name already exists"
+      "duplicateName": "Voiceprint name already exists",
+      "noRegisteredVoiceprints": "No registered voiceprints yet"
+
     },
     "button": {
       "deleteAudio": "Delete current audio",

@@ -209,7 +209,7 @@ const Voiceprint: React.FC<VoiceprintProps> = ({ onNavigate, jaboboId }) => {
           setRegisteredVoiceprints(reloadResponse.data);
         }
         
-        onNavigate('DASHBOARD');
+        // onNavigate('DASHBOARD');
       } else {
         alert(`${t('voiceprint.error.registerFailed')}：${response?.message || response?.detail}`);
       }

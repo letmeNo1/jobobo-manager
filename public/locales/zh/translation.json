@@ -158,7 +158,8 @@
     "prompt": {
       "selectFile": "选择一个文件...",
       "voiceprintLimit": "每个设备最多支持10个声纹",
-      "duplicateName": "声纹名称已存在"
+      "duplicateName": "声纹名称已存在",
+      "noRegisteredVoiceprints": "暂无已注册的声纹" 
     },
     "button": {
       "deleteAudio": "删除当前音频",

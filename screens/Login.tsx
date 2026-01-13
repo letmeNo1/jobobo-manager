@@ -61,14 +61,15 @@ const Login: React.FC<LoginProps> = ({ onNavigate }) => {
 
       <div className="w-full max-w-md bg-white rounded-[40px] p-10 shadow-xl border border-gray-100">
         <div className="flex flex-col items-center mb-10">
-          <div className="w-20 h-20 bg-yellow-400 rounded-3xl flex items-center justify-center mb-4 shadow-lg shadow-yellow-200 overflow-hidden p-2">
+          {/* 移除黄色背景和黄色阴影，改为纯白背景 + 浅灰色边框/阴影 */}
+          <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center mb-4 shadow-lg shadow-gray-100 overflow-hidden p-2 border border-gray-100">
             <img 
               src={logoImg} 
               alt={`${t('login.title')} Logo`} 
               className="w-full h-full object-contain" 
             />
           </div>
-          {/* 替换硬编码文本为翻译函数（保留） */}
+          {/* 翻译文本部分保持不变 */}
           <h2 className="text-3xl font-black text-gray-800 tracking-tight">{t('login.title')}</h2>
           <p className="text-gray-400 font-bold text-xs uppercase tracking-widest mt-2">{t('login.subtitle')}</p>
         </div>
@@ -106,14 +107,14 @@ const Login: React.FC<LoginProps> = ({ onNavigate }) => {
           </button>
         </form>
 
-        <div className="mt-8 flex justify-center">
+        {/* <div className="mt-8 flex justify-center">
           <button 
             onClick={() => onNavigate('SIGNUP')}
             className="text-gray-400 text-xs font-bold uppercase tracking-widest hover:text-gray-600 transition-colors"
           >
             {t('login.createAccount')}
           </button>
-        </div>
+        </div> */}
       </div>
       
       <div className="mt-8 flex items-center text-gray-300">
