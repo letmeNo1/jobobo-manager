@@ -98,7 +98,8 @@
     "syncToDevice": "Sync Config to Device",
     "settings": "Settings",
     "adminPanel": "Admin Panel",
-    "signOut": "Sign Out"
+    "signOut": "Sign Out",
+    "version": "Version"
   },
   "voiceprint": {
     "title": "Voiceprint Management",

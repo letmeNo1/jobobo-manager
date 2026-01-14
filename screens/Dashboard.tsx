@@ -19,12 +19,16 @@ interface DashboardProps {
   onDeletePersona: (id: string) => void;
   memory: string;
   setMemory: (v: string) => void;
+  // 新增版本号属性（如果需要从外部传入）
+  version?: string;
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ 
   jaboboId, onNavigate, personas, setPersonas, activePersonaId, 
   setActivePersonaId, onUpdatePersona, onAddPersona, onDeletePersona, 
-  memory, setMemory 
+  memory, setMemory,
+  // 可以从外部传入版本号，也可以直接在组件内定义
+  version = 'v1.0.0' 
 }) => {
   // 获取i18n翻译函数
   const { t } = useTranslation();
@@ -151,10 +155,16 @@ const Dashboard: React.FC<DashboardProps> = ({
 
       <div className="bg-white p-6 pb-12 rounded-b-[40px] shadow-sm mb-6 flex flex-col items-center">
         <div className="w-full flex justify-between items-center mb-4 px-2">
+          {/* ========== 关键修改区域开始 ========== */}
           <div className="flex flex-col">
             <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('dashboard.activeDevice')}</span> {/* 翻译活跃设备 */}
             <h2 className="text-xl font-black text-gray-900">{currentUser.username}</h2>
+            {/* 新增版本信息展示 */}
+            <span className="text-[9px] font-bold text-gray-300 mt-1">
+              {t('dashboard.version')}: {version}
+            </span>
           </div>
+          {/* ========== 关键修改区域结束 ========== */}
           <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase ${currentUser.role === 'Admin' ? 'bg-yellow-100 text-yellow-700' : 'bg-blue-100 text-blue-700'}`}>
             {currentUser.role === 'Admin' ? t('dashboard.admin') : t('dashboard.user')} {/* 翻译角色 */}
           </div>

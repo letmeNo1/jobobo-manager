@@ -118,7 +118,9 @@
     "syncToDevice": "同步配置到设备",
     "settings": "设置",
     "adminPanel": "管理面板",
-    "signOut": "退出登录"
+    "signOut": "退出登录",
+    "version": "版本"
+
   },
   "voiceprint": {
     "title": "声纹管理", 
